@@ -1,0 +1,35 @@
+#!/usr/bin/ruby
+
+require 'optparse'
+require "lib/mysql-inspector"
+
+options = {
+  :compare => false,
+  :dumps => [],
+  :base_dir => "."
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: ????"
+
+  opts.on("-c", "--compare db1,db2") do |compare|
+    current, target = compare.split ","
+    db_current, version_name_current = current.split(":")
+    db_target, version_name_target = target.split(":")
+
+    options[:compare] = true
+    options[:dumps] << [db_current, version_name_current || "current"]
+    options[:dumps] << [db_target, version_name_target || "target"]
+  end
+end.parse!
+
+if options[:compare]
+  current, target = options[:dumps].collect do |db, version|
+    MysqlInspector::Dump.new(db,version, options[:base_dir])
+  end
+
+  comparison = MysqlInspector::Comparison.new(current, target)
+  comparison.compare(STDOUT)
+else
+  puts "nothing to do"
+end
