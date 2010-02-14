@@ -29,7 +29,7 @@ if options[:compare]
   end
 
   comparison = MysqlInspector::Comparison.new(current, target)
-  comparison.compare(STDOUT)
+  comparison.run!(STDOUT)
 else
   puts "nothing to do"
 end

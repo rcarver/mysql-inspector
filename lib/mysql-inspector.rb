@@ -1,3 +1,5 @@
+require "fileutils"
+
 module MysqlInspector
 
   module Config
@@ -27,7 +29,7 @@ module MysqlInspector
       @args = args
     end
     def to_s
-      "#{@path} #{args * " "}"
+      "#{@path} #{@args * " "}"
     end
     def run!
       system to_s
@@ -40,15 +42,21 @@ module MysqlInspector
       @version = version
       @base_dir = base_dir
     end
+
+    attr_reader :db_name, :version, :base_dir
+
     def dir
-      File.join(@base_dir, @version)
+      File.join(base_dir, version)
     end
+
     def mkdir
       FileUtils.mkdir_p(dir)
     end
+
     def command
-      Config.mysqldump("--no-data", "-T #{dir}", "--skip-opt", @db_name)
+      Config.mysqldump("--no-data", "-T #{dir}", "--skip-opt", db_name)
     end
+
     def run!
       mkdir
       command.run!
@@ -63,11 +71,22 @@ module MysqlInspector
 
     attr_reader :current, :target
 
+    def run!(writer=STDOUT)
+      current.run!
+      target.run!
+      compare(writer)
+    end
+
     def ignore_files
       ["migration_info.sql"]
     end
 
     def compare(writer=STDOUT)
+      writer.puts
+      writer.puts "Current: #{current.db_name}"
+      writer.puts "Target:  #{target.db_name}"
+      writer.puts
+
       current_files = Dir[File.join(current.dir, "*.sql")].collect { |f| File.basename(f) }.sort
       target_files = Dir[File.join(target.dir, "*.sql")].collect { |f| File.basename(f) }.sort
 
