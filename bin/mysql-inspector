@@ -6,16 +6,23 @@ require "lib/mysql-inspector"
 options = {
   :compare => false,
   :dumps => [],
-  :base_dir => "."
+  :base_dir => ".",
+  :clean => true,
+  :dump => true
 }
 
 OptionParser.new do |opts|
   opts.banner = "Usage: ????"
 
   opts.on("-c", "--compare db1,db2") do |compare|
-    current, target = compare.split ","
-    db_current, version_name_current = current.split(":")
-    db_target, version_name_target = target.split(":")
+
+    if compare =~ /,/
+      current, target = compare.split ","
+      db_current, version_name_current = current.split(":")
+      db_target, version_name_target = target.split(":")
+    else
+      db_current, db_target = "#{compare}_development", "#{compare}_test"
+    end
 
     options[:compare] = true
     options[:dumps] << [db_current, version_name_current || "current"]
@@ -28,8 +35,15 @@ if options[:compare]
     MysqlInspector::Dump.new(db,version, options[:base_dir])
   end
 
+  if options[:clean]
+    [current, target].each { |d| d.clean! }
+  end
+  if options[:dump]
+    [current, target].each { |d| d.run! }
+  end
+
   comparison = MysqlInspector::Comparison.new(current, target)
-  comparison.run!(STDOUT)
+  comparison.compare(STDOUT)
 else
   puts "nothing to do"
 end

@@ -41,6 +41,7 @@ module MysqlInspector
       @db_name = db_name
       @version = version
       @base_dir = base_dir
+      # TODO: sanity check base_dir for either a relative dir or /tmp/...
     end
 
     attr_reader :db_name, :version, :base_dir
@@ -57,6 +58,10 @@ module MysqlInspector
       Config.mysqldump("--no-data", "-T #{dir}", "--skip-opt", db_name)
     end
 
+    def clean!
+      FileUtils.rm_rf(dir)
+    end
+
     def run!
       mkdir
       command.run!
@@ -71,12 +76,6 @@ module MysqlInspector
 
     attr_reader :current, :target
 
-    def run!(writer=STDOUT)
-      current.run!
-      target.run!
-      compare(writer)
-    end
-
     def ignore_files
       ["migration_info.sql"]
     end
@@ -85,7 +84,6 @@ module MysqlInspector
       writer.puts
       writer.puts "Current: #{current.db_name}"
       writer.puts "Target:  #{target.db_name}"
-      writer.puts
 
       current_files = Dir[File.join(current.dir, "*.sql")].collect { |f| File.basename(f) }.sort
       target_files = Dir[File.join(target.dir, "*.sql")].collect { |f| File.basename(f) }.sort
@@ -102,13 +100,12 @@ module MysqlInspector
         writer.puts
         writer.puts "Tables only in current"
         writer.puts files_only_in_current.collect { |f| file_to_table(f) }.join(", ")
-        writer.puts
       end
 
       if files_only_in_target.any?
+        writer.puts
         writer.puts "Tables in target but not in current"
         writer.puts files_only_in_target.collect { |f| file_to_table(f) }.join(", ")
-        writer.puts
       end
 
       common_files.each do |f|
@@ -120,6 +117,7 @@ module MysqlInspector
 
         next if current_schema == target_schema
 
+        writer.puts
         writer.puts file_to_table(f)
         writer.puts "*" * file_to_table(f).size
         writer.puts
