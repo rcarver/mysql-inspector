@@ -1,0 +1,3 @@
+bin/mysql-inspector --compare current_database,target_database
+
+bin/mysql-inspectro --compare myproject
