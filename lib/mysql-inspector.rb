@@ -91,8 +91,8 @@ module MysqlInspector
 
     def compare(writer=STDOUT)
       writer.puts
-      writer.puts "Current: #{current.db_name}"
-      writer.puts "Target:  #{target.db_name}"
+      writer.puts "Current: #{current.version} (#{current.db_name})"
+      writer.puts "Target:  #{target.version} (#{target.db_name})"
 
       current_files = Dir[File.join(current.dir, "*.sql")].collect { |f| File.basename(f) }.sort
       target_files = Dir[File.join(target.dir, "*.sql")].collect { |f| File.basename(f) }.sort

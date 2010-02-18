@@ -58,9 +58,7 @@ if options[:dump]
 end
 
 if options[:compare]
-  current, target = options[:versions].collect do |db, version|
-    MysqlInspector::Dump.new(version, options[:base_dir])
-  end
-  comparison = MysqlInspector::Comparison.new(*options[:versions])
+  inputs = ["a", "b"].collect { |version| MysqlInspector::Dump.new(version, options[:base_dir]) }
+  comparison = MysqlInspector::Comparison.new(*inputs)
   comparison.compare(STDOUT)
 end
