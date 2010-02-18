@@ -4,46 +4,63 @@ require 'optparse'
 require "lib/mysql-inspector"
 
 options = {
-  :compare => false,
-  :dumps => [],
+  :databases => [],
+  :versions => [],
   :base_dir => ".",
-  :clean => true,
-  :dump => true
+  :compare => false,
+  :dump => false,
+  :clean => false
 }
 
 OptionParser.new do |opts|
   opts.banner = "Usage: ????"
 
-  opts.on("-c", "--compare db1,db2") do |compare|
-
-    if compare =~ /,/
-      current, target = compare.split ","
-      db_current, version_name_current = current.split(":")
-      db_target, version_name_target = target.split(":")
-    else
-      db_current, db_target = "#{compare}_development", "#{compare}_test"
-    end
-
-    options[:compare] = true
-    options[:dumps] << [db_current, version_name_current || "current"]
-    options[:dumps] << [db_target, version_name_target || "target"]
+  opts.on("-a [db]") do |db_name|
+    options[:versions] << "a"
+    options[:databases] << db_name
   end
+
+  opts.on("-b [db]") do |db_name|
+    options[:versions] << "b"
+    options[:databases] << db_name
+  end
+
+  opts.on("-d", "--dump") do |yes|
+    options[:dump] = true
+  end
+
+  opts.on("-f", "--fresh") do |ok|
+    options[:clean] = true
+  end
+
+  opts.on("-c", "--compare") do |info|
+    options[:compare] = true
+  end
+
 end.parse!
 
+options[:versions].compact!
+options[:databases].compact!
+
+options[:versions].collect! do |version|
+  MysqlInspector::Dump.new(version, options[:base_dir])
+end
+
+if options[:clean]
+  options[:versions].each { |v| v.clean! }
+end
+
+if options[:dump]
+  raise "Missing database names" unless options[:versions].size == options[:databases].size
+  options[:versions].zip(options[:databases]).each do |v, d|
+    v.dump!(d)
+  end
+end
+
 if options[:compare]
-  current, target = options[:dumps].collect do |db, version|
-    MysqlInspector::Dump.new(db,version, options[:base_dir])
+  current, target = options[:versions].collect do |db, version|
+    MysqlInspector::Dump.new(version, options[:base_dir])
   end
-
-  if options[:clean]
-    [current, target].each { |d| d.clean! }
-  end
-  if options[:dump]
-    [current, target].each { |d| d.run! }
-  end
-
-  comparison = MysqlInspector::Comparison.new(current, target)
+  comparison = MysqlInspector::Comparison.new(*options[:versions])
   comparison.compare(STDOUT)
-else
-  puts "nothing to do"
 end

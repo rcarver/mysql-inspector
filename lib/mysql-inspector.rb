@@ -37,34 +37,43 @@ module MysqlInspector
   end
 
   class Dump
-    def initialize(db_name, version, base_dir)
-      @db_name = db_name
+    def initialize(version, base_dir)
       @version = version
       @base_dir = base_dir
       # TODO: sanity check base_dir for either a relative dir or /tmp/...
     end
 
-    attr_reader :db_name, :version, :base_dir
+    attr_reader :version, :base_dir
+
+    def db_name
+      @db_name ||= read_db_name
+    end
 
     def dir
       File.join(base_dir, version)
-    end
-
-    def mkdir
-      FileUtils.mkdir_p(dir)
-    end
-
-    def command
-      Config.mysqldump("--no-data", "-T #{dir}", "--skip-opt", db_name)
     end
 
     def clean!
       FileUtils.rm_rf(dir)
     end
 
-    def run!
-      mkdir
-      command.run!
+    def dump!(db_name)
+      raise "Destination exists! (#{dir.inspect})" if File.exist?(dir)
+      @db_name = db_name
+      FileUtils.mkdir_p(dir)
+      Config.mysqldump("--no-data", "-T #{dir}", "--skip-opt", db_name).run!
+      File.open(info_file, "w") { |f| f.puts(db_name) }
+    end
+
+  protected
+
+    def info_file
+      File.join(dir, ".info")
+    end
+
+    def read_db_name
+      raise "No dump exists at #{dir.inspect}" unless File.exist?(info_file)
+      File.read(info_file).strip
     end
   end
 
