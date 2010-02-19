@@ -77,7 +77,58 @@ module MysqlInspector
     end
   end
 
+  module Utils
+
+    def file_to_table(file)
+      file[/(.*)\.sql/, 1]
+    end
+
+    def sanitize_schema!(schema)
+      schema.delete_if { |line| line =~ /(\/\*|--)/ or line.strip.empty? }
+      schema.collect! { |line| line.rstrip[/(.*?),?$/, 1] }
+      schema.sort!
+      schema
+    end
+  end
+
+  class Grep
+    include Utils
+
+    def initialize(dump)
+      @dump = dump
+    end
+
+    attr_reader :dump
+
+    def find(writer, *columns)
+      writer.puts
+      writer.puts "Searching #{dump.version} (#{dump.db_name}) for #{columns.inspect}"
+      writer.puts
+      files = Dir[File.join(dump.dir, "*.sql")].collect { |f| File.basename(f) }.sort
+      files.each do |f|
+        schema = File.read(File.join(dump.dir, f)).split("\n")
+        sanitize_schema!(schema)
+
+        matches = schema.select { |line| columns.all? { |c| line =~ /#{Regexp.escape c}/ } }
+        if matches.any?
+        writer.puts
+          writer.puts file_to_table(f)
+          writer.puts "*" * file_to_table(f).size
+          writer.puts
+          writer.puts "Found matching:"
+          writer.puts matches.join("\n")
+          writer.puts
+          writer.puts "Full schema:"
+          writer.puts schema.join("\n")
+        writer.puts
+        end
+      end
+    end
+  end
+
   class Comparison
+    include Utils
+
     def initialize(current, target)
       @current = current
       @target = target
@@ -147,16 +198,6 @@ module MysqlInspector
       end
     end
 
-    def file_to_table(file)
-      file[/(.*)\.sql/, 1]
-    end
-
-    def sanitize_schema!(schema)
-      schema.delete_if { |line| line =~ /(\/\*|--)/ }
-      schema.collect! { |line| line.rstrip[/(.*?),?$/, 1] }
-      schema.sort!
-      schema
-    end
   end
 
 end

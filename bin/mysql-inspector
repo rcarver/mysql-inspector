@@ -8,6 +8,7 @@ options = {
   :versions => [],
   :base_dir => ".",
   :compare => false,
+  :grep => false,
   :dump => false,
   :clean => false
 }
@@ -27,6 +28,10 @@ OptionParser.new do |opts|
 
   opts.on("-d", "--dump") do |yes|
     options[:dump] = true
+  end
+
+  opts.on("-g", "--grep column,names,to,find") do |columns|
+    options[:grep] = columns.split(",").collect { |c| c.strip }
   end
 
   opts.on("-f", "--fresh") do |ok|
@@ -54,6 +59,13 @@ if options[:dump]
   raise "Missing database names" unless options[:versions].size == options[:databases].size
   options[:versions].zip(options[:databases]).each do |v, d|
     v.dump!(d)
+  end
+end
+
+if options[:grep]
+  options[:versions].each do |v|
+    grep = MysqlInspector::Grep.new(v)
+    grep.find(STDOUT, *options[:grep])
   end
 end
 
