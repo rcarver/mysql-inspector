@@ -84,8 +84,8 @@ module MysqlInspector
     end
 
     def sanitize_schema!(schema)
-      schema.delete_if { |line| line =~ /(\/\*|--)/ or line.strip.empty? }
       schema.collect! { |line| line.rstrip[/(.*?),?$/, 1] }
+      schema.delete_if { |line| line =~ /(\/\*|--|CREATE TABLE)/ or line == ");" or line.strip.empty? }
       schema.sort!
       schema
     end
@@ -100,16 +100,23 @@ module MysqlInspector
 
     attr_reader :dump
 
-    def find(writer, *columns)
+    def find(writer, *matchers)
       writer.puts
-      writer.puts "Searching #{dump.version} (#{dump.db_name}) for #{columns.inspect}"
+      writer.puts "Searching #{dump.version} (#{dump.db_name}) for #{matchers.inspect}"
       writer.puts
       files = Dir[File.join(dump.dir, "*.sql")].collect { |f| File.basename(f) }.sort
       files.each do |f|
         schema = File.read(File.join(dump.dir, f)).split("\n")
         sanitize_schema!(schema)
 
-        matches = schema.select { |line| columns.all? { |c| line =~ /#{Regexp.escape c}/ } }
+        matches = schema.select do |line|
+          matchers.all? do |matcher|
+            col, *items = matcher.split(/\s+/)
+            col = "`#{col}`"
+            [col, items].flatten.all? { |item| line.downcase =~ /#{Regexp.escape item.downcase}/ }
+          end
+        end
+
         if matches.any?
         writer.puts
           writer.puts file_to_table(f)
