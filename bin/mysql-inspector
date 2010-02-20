@@ -7,7 +7,7 @@ options = {
   :databases => [],
   :versions => [],
   :base_dir => ".",
-  :compare => false,
+  :diff => false,
   :grep => false,
   :dump => false,
   :clean => false
@@ -16,13 +16,13 @@ options = {
 OptionParser.new do |opts|
   opts.banner = "Usage: ????"
 
-  opts.on("-a [db]") do |db_name|
-    options[:versions] << "a"
+  opts.on("-c", "--current [db]") do |db_name|
+    options[:versions] << "current"
     options[:databases] << db_name
   end
 
-  opts.on("-b [db]") do |db_name|
-    options[:versions] << "b"
+  opts.on("-t", "--target [db]") do |db_name|
+    options[:versions] << "target"
     options[:databases] << db_name
   end
 
@@ -30,16 +30,16 @@ OptionParser.new do |opts|
     options[:dump] = true
   end
 
-  opts.on("-g", "--grep column,names,to,find") do |columns|
-    options[:grep] = columns.split(",").collect { |c| c.strip }
-  end
-
   opts.on("-f", "--fresh") do |ok|
     options[:clean] = true
   end
 
-  opts.on("-c", "--compare") do |info|
-    options[:compare] = true
+  opts.on("-g", "--grep foo_id,bar_id") do |columns|
+    options[:grep] = columns.split(",").collect { |c| c.strip }
+  end
+
+  opts.on("-d", "--diff") do |info|
+    options[:diff] = true
   end
 
 end.parse!
@@ -69,8 +69,8 @@ if options[:grep]
   end
 end
 
-if options[:compare]
-  inputs = ["a", "b"].collect { |version| MysqlInspector::Dump.new(version, options[:base_dir]) }
+if options[:diff]
+  inputs = ["current", "target"].collect { |version| MysqlInspector::Dump.new(version, options[:base_dir]) }
   comparison = MysqlInspector::Comparison.new(*inputs)
   comparison.compare(STDOUT)
 end
