@@ -1,3 +1,48 @@
-bin/mysql-inspector --compare current_database,target_database
+mysql-inspector is a simple tool for diffing and searching mysql dumps.
 
-bin/mysql-inspectro --compare myproject
+Why do I need that?
+
+It helps you migrate your schema from one version to another.
+
+Ok, how?
+
+Say you have a project called zippers. Your development database is called
+zippers_development. You're working on a branch called smoother, based on
+master, which adds a new column metal_grade.
+
+Start by storing the new state of your database.
+
+% mysql-inspector --target zippers_development --dump
+
+This command says "store the state of the zippers_development database as my
+target version".
+
+Now, go back to your master branch and load its database into
+zippers_development, then dump the contents.
+
+% mysql-inspector --current zippers_development --dump
+
+Now, in order to write database migrations for master to smoother let's see
+what changes occurred.
+
+% mysql-inspector --diff
+
+[[ show sample output ]]
+
+Here we see that our target version contains one column that the current
+version does not. It's easy to write an alter statement, in fact most of the
+information is right here.
+
+mysql% alter table zippers add column metal_grade int(11) NOT NULL DEFAULT '0';
+
+Now we can compare the two again. This time we need to add the --force argument
+to say that it's ok to overwrite the previous dump.
+
+% mysql-inspector --current zippers_development --dump --force
+% mysql-inspector --diff
+
+No differences!
+
+That was pretty simple. Is there more?
+
+Sure.
