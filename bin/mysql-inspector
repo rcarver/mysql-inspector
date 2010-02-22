@@ -26,7 +26,7 @@ OptionParser.new do |opts|
     options[:databases] << db_name
   end
 
-  opts.on("-d", "--dump") do |yes|
+  opts.on("-w", "--write") do |yes|
     options[:dump] = true
   end
 
