@@ -30,7 +30,7 @@ OptionParser.new do |opts|
     options[:dump] = true
   end
 
-  opts.on("-f", "--fresh") do |ok|
+  opts.on("-f", "--force") do |ok|
     options[:clean] = true
   end
 
