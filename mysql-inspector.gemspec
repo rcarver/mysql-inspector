@@ -22,7 +22,8 @@ Gem::Specification.new do |s|
      "Rakefile",
      "VERSION",
      "bin/mysql-inspector",
-     "lib/mysql-inspector.rb"
+     "lib/mysql-inspector.rb",
+     "mysql-inspector.gemspec"
   ]
   s.homepage = %q{http://github.com/rcarver/mysql-inspector}
   s.rdoc_options = ["--charset=UTF-8"]
