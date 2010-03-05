@@ -9,38 +9,42 @@ options = {
   :base_dir => ".",
   :diff => false,
   :grep => false,
-  :dump => false,
+  :write => false,
   :clean => false
 }
 
 OptionParser.new do |opts|
-  opts.banner = "Usage: ????"
+  opts.banner = "Usage: #{File.basename $0} [options]"
 
-  opts.on("-c", "--current [db]") do |db_name|
+  opts.on("-c", "--current", "Perform the given action(s) with the current version.") do
     options[:versions] << "current"
-    options[:databases] << db_name
   end
 
-  opts.on("-t", "--target [db]") do |db_name|
+  opts.on("-t", "--target", "Perform the given action(s) with the target version.") do
     options[:versions] << "target"
-    options[:databases] << db_name
   end
 
-  opts.on("-w", "--write") do |yes|
-    options[:dump] = true
+  opts.on("-w", "--write DB", "Store a schema for the database") do |db_name|
+    options[:write] = db_name
   end
 
-  opts.on("-f", "--force") do |ok|
+  opts.on("-f", "--force", "Overwrite a previously stored schema") do |ok|
     options[:clean] = true
   end
 
-  opts.on("-g", "--grep foo_id,bar_id") do |columns|
+  opts.on("-d", "--diff", "Output a comparison between the current and target schemas") do |info|
+    options[:diff] = true
+  end
+
+  opts.on("-g", "--grep foo_id,bar_id", "Find columns and/or indices matching the pattern") do |columns|
     options[:grep] = columns.split(",").collect { |c| c.strip }
   end
 
-  opts.on("-d", "--diff") do |info|
-    options[:diff] = true
+  opts.on("-h", "--help", "What you're looking at") do
+    puts opts
   end
+
+  puts opts if ARGV.empty?
 
 end.parse!
 
@@ -55,11 +59,11 @@ if options[:clean]
   options[:versions].each { |v| v.clean! }
 end
 
-if options[:dump]
-  raise "Missing database names" unless options[:versions].size == options[:databases].size
-  options[:versions].zip(options[:databases]).each do |v, d|
-    v.dump!(d)
-  end
+if options[:write]
+  raise "Please specify which version to write" if options[:versions].size == 0
+  raise "I can only write one version at a time" unless options[:versions].size == 1
+  version = options[:versions].first
+  version.dump!(options[:write])
 end
 
 if options[:grep]
