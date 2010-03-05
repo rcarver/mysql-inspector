@@ -12,7 +12,7 @@ master, which adds a new column metal_grade.
 
 Start by storing the new state of your database.
 
-% mysql-inspector --target zippers_development --write
+% mysql-inspector --target --write zippers_development
 
 This command says "store the state of the zippers_development database as my
 target version".
@@ -20,7 +20,7 @@ target version".
 Now, go back to your master branch and load its database into
 zippers_development, then dump the contents.
 
-% mysql-inspector --current zippers_development --write
+% mysql-inspector --current --write zippers_development
 
 Now, in order to write database migrations for master to smoother let's see
 what changes occurred.
@@ -35,11 +35,11 @@ information is right here.
 
 mysql% alter table zippers add column metal_grade int(11) NOT NULL DEFAULT '0';
 
-Now we can compare the two again. This time we need to add the --force argument
-to say that it's ok to overwrite the previous dump.
+Now we can compare the two again. This time we need to add the --force
+argument to say that it's ok to overwrite the previous dump. We'll also go
+ahead and run the diff.
 
-% mysql-inspector --current zippers_development --write --force
-% mysql-inspector --diff
+% mysql-inspector --current --write zippers_development --force --diff
 
 No differences!
 
