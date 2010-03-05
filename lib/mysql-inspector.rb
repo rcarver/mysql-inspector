@@ -2,6 +2,8 @@ require "fileutils"
 
 module MysqlInspector
 
+  Precondition = Class.new(StandardError)
+
   module Config
     extend self
 
@@ -17,7 +19,7 @@ module MysqlInspector
     def mysqldump_path
       @mysqldump_path ||= begin
         path = `which mysqldump`.chomp
-        raise "mysqldump was not in your path" if path.empty?
+        raise Precondition, "mysqldump was not in your path" if path.empty?
         path
       end
     end
@@ -57,8 +59,12 @@ module MysqlInspector
       FileUtils.rm_rf(dir)
     end
 
+    def exists?
+      File.exist?(dir)
+    end
+
     def dump!(db_name)
-      raise "Destination exists! (#{dir.inspect})" if File.exist?(dir)
+      raise Precondition, "Can't overwrite an existing schema at #{dir.inspect}" if exists?
       @db_name = db_name
       FileUtils.mkdir_p(dir)
       Config.mysqldump("--no-data", "-T #{dir}", "--skip-opt", db_name).run!
@@ -72,7 +78,7 @@ module MysqlInspector
     end
 
     def read_db_name
-      raise "No dump exists at #{dir.inspect}" unless File.exist?(info_file)
+      raise Precondition, "No dump exists at #{dir.inspect}" unless File.exist?(info_file)
       File.read(info_file).strip
     end
   end

@@ -4,7 +4,6 @@ require 'optparse'
 require "lib/mysql-inspector"
 
 options = {
-  :databases => [],
   :versions => [],
   :base_dir => ".",
   :diff => false,
@@ -48,33 +47,43 @@ OptionParser.new do |opts|
 
 end.parse!
 
-options[:versions].compact!
-options[:databases].compact!
-
-options[:versions].collect! do |version|
-  MysqlInspector::Dump.new(version, options[:base_dir])
+def how_to_write_version(input)
+  "#{File.basename $0} --#{input.version} --write DB_NAME"
 end
 
-if options[:clean]
-  options[:versions].each { |v| v.clean! }
-end
+begin
 
-if options[:write]
-  raise "Please specify which version to write" if options[:versions].size == 0
-  raise "I can only write one version at a time" unless options[:versions].size == 1
-  version = options[:versions].first
-  version.dump!(options[:write])
-end
-
-if options[:grep]
-  options[:versions].each do |v|
-    grep = MysqlInspector::Grep.new(v)
-    grep.find(STDOUT, *options[:grep])
+  options[:versions].collect! do |version|
+    MysqlInspector::Dump.new(version, options[:base_dir])
   end
-end
 
-if options[:diff]
-  inputs = ["current", "target"].collect { |version| MysqlInspector::Dump.new(version, options[:base_dir]) }
-  comparison = MysqlInspector::Comparison.new(*inputs)
-  comparison.compare(STDOUT)
+  if options[:clean]
+    options[:versions].each { |v| v.clean! }
+  end
+
+  if options[:write]
+    raise MysqlInspector::Precondition, "Please specify which version to write" if options[:versions].size == 0
+    raise MysqlInspector::Precondition, "I can only write one version at a time" unless options[:versions].size == 1
+    version = options[:versions].first
+    version.dump!(options[:write])
+  end
+
+  if options[:grep]
+    options[:versions].each do |v|
+      grep = MysqlInspector::Grep.new(v)
+      grep.find(STDOUT, *options[:grep])
+    end
+  end
+
+  if options[:diff]
+    inputs = ["current", "target"].collect { |version| MysqlInspector::Dump.new(version, options[:base_dir]) }
+    inputs.each do |input|
+      raise MysqlInspector::Precondition, "No #{input.version} version exists. Write one with `#{how_to_write_version(input)}`" unless input.exists?
+    end
+    comparison = MysqlInspector::Comparison.new(*inputs)
+    comparison.compare(STDOUT)
+  end
+
+rescue MysqlInspector::Precondition => e
+  puts "#{e.message}."
 end
