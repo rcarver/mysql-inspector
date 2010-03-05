@@ -6,6 +6,7 @@ begin
     gemspec.email = "ryan@fivesevensix.com"
     gemspec.homepage = "http://github.com/rcarver/mysql-inspector"
     gemspec.authors = ["Ryan Carver"]
+    gemspec.executables = ["mysql-inspector"]
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
