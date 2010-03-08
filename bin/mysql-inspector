@@ -40,6 +40,10 @@ OptionParser.new do |opts|
     options[:grep] = columns.split(",").collect { |c| c.strip }
   end
 
+  opts.on("--to DIR", "Where to store schemas. Defaults to '.'") do |dir|
+    options[:base_dir] = dir
+  end
+
   opts.on("-h", "--help", "What you're looking at") do
     puts opts
   end
