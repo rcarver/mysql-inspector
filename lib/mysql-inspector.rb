@@ -47,8 +47,8 @@ module MysqlInspector
 
     attr_reader :version, :base_dir
 
-    def db_name
-      @db_name ||= read_db_name
+    def db_date
+      @db_date ||= read_db_date
     end
 
     def dir
@@ -65,10 +65,9 @@ module MysqlInspector
 
     def dump!(db_name)
       raise Precondition, "Can't overwrite an existing schema at #{dir.inspect}" if exists?
-      @db_name = db_name
       FileUtils.mkdir_p(dir)
       Config.mysqldump("--no-data", "-T #{dir}", "--skip-opt", db_name).run!
-      File.open(info_file, "w") { |f| f.puts(db_name) }
+      File.open(info_file, "w") { |f| f.puts(Time.now.utc.strftime("%Y-%m-%d")) }
     end
 
   protected
@@ -77,7 +76,7 @@ module MysqlInspector
       File.join(dir, ".info")
     end
 
-    def read_db_name
+    def read_db_date
       raise Precondition, "No dump exists at #{dir.inspect}" unless File.exist?(info_file)
       File.read(info_file).strip
     end
@@ -108,7 +107,7 @@ module MysqlInspector
 
     def find(writer, *matchers)
       writer.puts
-      writer.puts "Searching #{dump.version} (#{dump.db_name}) for #{matchers.inspect}"
+      writer.puts "Searching #{dump.version} (#{dump.db_date}) for #{matchers.inspect}"
       writer.puts
       files = Dir[File.join(dump.dir, "*.sql")].collect { |f| File.basename(f) }.sort
       files.each do |f|
@@ -155,8 +154,8 @@ module MysqlInspector
 
     def compare(writer=STDOUT)
       writer.puts
-      writer.puts "Current: #{current.version} (#{current.db_name})"
-      writer.puts "Target:  #{target.version} (#{target.db_name})"
+      writer.puts "Current: #{current.version} (#{current.db_date})"
+      writer.puts "Target:  #{target.version} (#{target.db_date})"
 
       current_files = Dir[File.join(current.dir, "*.sql")].collect { |f| File.basename(f) }.sort
       target_files = Dir[File.join(target.dir, "*.sql")].collect { |f| File.basename(f) }.sort
