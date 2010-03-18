@@ -12,6 +12,17 @@ module MysqlInspector
       Command.new(mysqldump_path, *all_args)
     end
 
+    def strip_timestamps_from_dump!(dir)
+      Dir[File.join(dir, "*.sql")].each do |file|
+        lines = File.readlines(file)
+        File.open(file, "w") do |f|
+          lines.each do |line|
+            f.puts line unless line =~ /^--/ or line =~ /^\/\*/ or line.strip.empty?
+          end
+        end
+      end
+    end
+
     def mysql_user
       @mysql_user ||= "root"
     end
@@ -67,6 +78,7 @@ module MysqlInspector
       raise Precondition, "Can't overwrite an existing schema at #{dir.inspect}" if exists?
       FileUtils.mkdir_p(dir)
       Config.mysqldump("--no-data", "-T #{dir}", "--skip-opt", db_name).run!
+      Config.strip_timestamps_from_dump!(dir)
       File.open(info_file, "w") { |f| f.puts(Time.now.utc.strftime("%Y-%m-%d")) }
     end
 
