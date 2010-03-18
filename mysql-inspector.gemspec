@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ryan Carver"]
-  s.date = %q{2010-03-08}
+  s.date = %q{2010-03-18}
   s.default_executable = %q{mysql-inspector}
   s.email = %q{ryan@fivesevensix.com}
   s.executables = ["mysql-inspector"]
