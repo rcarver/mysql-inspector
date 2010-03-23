@@ -4,21 +4,34 @@ module MysqlInspector
 
   Precondition = Class.new(StandardError)
 
+  module Utils
+
+    def file_to_table(file)
+      file[/(.*)\.sql/, 1]
+    end
+
+    def sanitize_schema!(schema)
+      schema.collect! { |line| line.rstrip[/(.*?),?$/, 1] }
+      schema.delete_if { |line| line =~ /(\/\*|--|CREATE TABLE)/ or line == ");" or line.strip.empty? }
+      schema.sort!
+      schema
+    end
+  end
+
   module Config
     extend self
+    extend Utils
 
     def mysqldump(*args)
       all_args = ["-u #{mysql_user}"] + args
       Command.new(mysqldump_path, *all_args)
     end
 
-    def strip_timestamps_from_dump!(dir)
+    def strip_noise_from_dump!(dir)
       Dir[File.join(dir, "*.sql")].each do |file|
-        lines = File.readlines(file)
+        lines = sanitize_schema!(File.readlines(file))
         File.open(file, "w") do |f|
-          lines.each do |line|
-            f.puts line unless line =~ /^--/ or line =~ /^\/\*/ or line.strip.empty?
-          end
+          f.puts lines.join("\n")
         end
       end
     end
@@ -78,7 +91,7 @@ module MysqlInspector
       raise Precondition, "Can't overwrite an existing schema at #{dir.inspect}" if exists?
       FileUtils.mkdir_p(dir)
       Config.mysqldump("--no-data", "-T #{dir}", "--skip-opt", db_name).run!
-      Config.strip_timestamps_from_dump!(dir)
+      Config.strip_noise_from_dump!(dir)
       File.open(info_file, "w") { |f| f.puts(Time.now.utc.strftime("%Y-%m-%d")) }
     end
 
@@ -91,20 +104,6 @@ module MysqlInspector
     def read_db_date
       raise Precondition, "No dump exists at #{dir.inspect}" unless File.exist?(info_file)
       File.read(info_file).strip
-    end
-  end
-
-  module Utils
-
-    def file_to_table(file)
-      file[/(.*)\.sql/, 1]
-    end
-
-    def sanitize_schema!(schema)
-      schema.collect! { |line| line.rstrip[/(.*?),?$/, 1] }
-      schema.delete_if { |line| line =~ /(\/\*|--|CREATE TABLE)/ or line == ");" or line.strip.empty? }
-      schema.sort!
-      schema
     end
   end
 
