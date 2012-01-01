@@ -1,10 +1,10 @@
-mysql-inspector is a simple tool for diffing and searching mysql dumps.
+# mysql-inspector is a simple tool for diffing and searching mysql dumps.
 
-Why do I need that?
+## Why do I need that?
 
 It helps you migrate your schema from one version to another.
 
-Ok, how?
+## Ok, how?
 
 Say you have a project called zippers. Your development database is called
 zippers_development. You're working on a branch called smoother, based on
