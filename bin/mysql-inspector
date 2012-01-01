@@ -2,7 +2,7 @@
 
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 require 'optparse'
-require "mysql-inspector"
+require "mysql_inspector"
 
 options = {
   :versions => [],

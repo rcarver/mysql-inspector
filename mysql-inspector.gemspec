@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "mysql-inspector/version"
+require "mysql_inspector/version"
 
 Gem::Specification.new do |s|
   s.name        = "mysql-inspector"
