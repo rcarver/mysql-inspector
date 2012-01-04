@@ -13,16 +13,6 @@ module MysqlInspector
       @lines.sort!
     end
 
-    def grep(matchers)
-      matches = lines.select do |line|
-        matchers.all? do |matcher|
-          col, *items = matcher.split(/\s+/)
-          col = "`#{col}`"
-          [col, items].flatten.all? { |item| line.downcase =~ /#{Regexp.escape item.downcase}/ }
-        end
-      end
-    end
-
     # Public: Get the name of the database that defines this table.
     #
     # Returns a String.
