@@ -22,8 +22,9 @@ module MysqlInspector
     #
     # Returns a Time
     def timestamp
-      raise Precondition, "No dump exists at #{dir.inspect}" unless exists?            
-      Time.parse(File.read(@info_file).strip)
+      if exists?
+        Time.parse(File.read(@info_file).strip)
+      end
     end
 
     # Public: Delete this dump from the filesystem.
@@ -46,8 +47,8 @@ module MysqlInspector
     def write!
       clean! if exists?
       FileUtils.mkdir_p(dir)
-      Runner.mysqldump("--no-data", "-T #{dir}", "--skip-opt", @db_name).run!
-      File.open(@info_file, "w") { |f| f.print(Time.now.utc.strftime("%Y-%m-%d")) }
+      Runner.mysqldump("--no-data", "-T #{dir}", "--skip-opt", @db_name)
+      File.open(@info_file, "w") { |f| f.print(Time.now.utc.to_s) }
     end
 
     # Public: Get the tables written by the dump.
@@ -55,8 +56,8 @@ module MysqlInspector
     # Returns an Array of MysqlInspector::Table.
     def tables
       Dir[File.join(dir, "*.sql")].map do |file|
-        lines = File.readlines(file)
-        Table.new(@db_name, Utils.file_to_table(file), lines)
+        schema = File.read(file)
+        Table.new(@db_name, schema)
       end
     end
 

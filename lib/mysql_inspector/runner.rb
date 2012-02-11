@@ -15,7 +15,7 @@ module MysqlInspector
     end
 
   protected
-  
+
     def self.mysqldump_path
       @mysqldump_path ||= begin
         path = `which mysqldump`.chomp
