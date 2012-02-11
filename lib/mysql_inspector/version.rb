@@ -1,5 +1,3 @@
-module Mysql
-  module Inspector
-    VERSION = "0.0.6"
-  end
+module MysqlInspector
+  VERSION = "0.0.6"
 end
