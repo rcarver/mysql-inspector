@@ -16,14 +16,12 @@ describe MysqlInspector::Dump do
     STR
   end
 
-  let(:dir) { "/tmp/mysql_inspector_test_#{Time.now.to_f}" }
-
   subject do
-    MysqlInspector::Dump.new(dir, database_name)
+    MysqlInspector::Dump.new(tmpdir, database_name)
   end
 
   after do
-    FileUtils.rm_rf dir
+    FileUtils.rm_rf tmpdir
   end
 
   describe "before written" do
