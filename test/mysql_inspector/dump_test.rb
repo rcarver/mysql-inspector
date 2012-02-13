@@ -17,7 +17,6 @@ describe MysqlInspector::Dump do
   end
 
   let(:dir) { "/tmp/mysql_inspector_test_#{Time.now.to_f}" }
-  let(:database_name) { dbname("my_database") }
 
   subject do
     MysqlInspector::Dump.new(dir, database_name)
@@ -41,11 +40,11 @@ describe MysqlInspector::Dump do
 
   describe "when written" do
     before do
-      create_mysql_database(database_name, schema)
+      create_mysql_database(schema)
       subject.write!
     end
     after do
-      drop_mysql_database(database_name)
+      drop_mysql_database
     end
     it "does exist" do
       subject.exists?.must_equal true

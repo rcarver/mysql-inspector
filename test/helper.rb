@@ -12,24 +12,23 @@ def mysql_command
 end
 
 def syscall(command)
-  result = system(command)
-  raise "FAILED: #{command.inspect}" unless result
+  raise "FAILED: #{command.inspect}" unless system(command)
 end
 
-def dbname(name)
-  ["mysql_inspector", name] * "_"
+def database_name
+  "mysql_inspector"
 end
 
-def create_mysql_database(name, schema)
-  drop_mysql_database(name)
-  syscall "echo 'CREATE DATABASE #{name}' | #{mysql_command}"
+def create_mysql_database(schema)
+  drop_mysql_database
+  syscall "echo 'CREATE DATABASE #{database_name}' | #{mysql_command}"
   Tempfile.open('schema') do |file|
     file.puts(schema)
     file.flush
-    syscall "cat #{file.path} | #{mysql_command} #{name}"
+    syscall "cat #{file.path} | #{mysql_command} #{database_name}"
   end
 end
 
-def drop_mysql_database(name)
-  syscall "echo 'DROP DATABASE IF EXISTS #{name}' | #{mysql_command}"
+def drop_mysql_database
+  syscall "echo 'DROP DATABASE IF EXISTS #{database_name}' | #{mysql_command}"
 end
