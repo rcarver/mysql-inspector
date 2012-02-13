@@ -5,6 +5,8 @@ require 'tempfile'
 
 class MysqlInspectorSpec < MiniTest::Spec
 
+  register_spec_type /.*/, self
+
   # Create a temporary directory. This directory will exist for the life of
   # the spec.
   #
@@ -36,8 +38,6 @@ class MysqlInspectorSpec < MiniTest::Spec
       syscall "cat #{file.path} | #{mysql_command} #{database_name}"
     end
   end
-
-  register_spec_type /.*/, self
 
   before do
     @tmpdir = nil
