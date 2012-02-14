@@ -2,23 +2,8 @@ require 'helper'
 
 describe MysqlInspector::Table do
 
-  let(:schema) do
-    <<-STR
-      CREATE TABLE `things` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `name` varchar(255) NOT NULL DEFAULT 'toy',
-        `weight` int(11) NULL,
-        `first_name` varchar(255) NOT NULL,
-        `last_name` varchar(255) NOT NULL,
-        UNIQUE KEY `primary` (`id`),
-        KEY `name` (`first_name`,`last_name`),
-        CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-
   subject do
-    MysqlInspector::Table.new("test", schema)
+    MysqlInspector::Table.new("test", things_schema)
   end
 
   it "knows the table name" do
@@ -43,7 +28,7 @@ describe MysqlInspector::Table do
 
   it "describes each index" do
     subject.indices[0].must_equal MysqlInspector::Index.new("name", ["first_name", "last_name"], false)
-    subject.indices[1].must_equal MysqlInspector::Index.new("primary", ["id"], true)
+    subject.indices[1].must_equal MysqlInspector::Index.new("things_primary", ["id"], true)
   end
 
   it "extracts all of the constraints" do

@@ -2,26 +2,8 @@ require 'helper'
 
 describe MysqlInspector::Dump do
 
-  let(:schema) do
-    <<-STR
-      CREATE TABLE `users` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        UNIQUE KEY `users_primary` (`id`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-      CREATE TABLE `things` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        UNIQUE KEY `things_primary` (`id`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-
   subject do
     MysqlInspector::Dump.new(tmpdir, database_name)
-  end
-
-  after do
-    FileUtils.rm_rf tmpdir
   end
 
   describe "before written" do
@@ -38,11 +20,8 @@ describe MysqlInspector::Dump do
 
   describe "when written" do
     before do
-      create_mysql_database(schema)
+      create_mysql_database(users_and_things_schema)
       subject.write!
-    end
-    after do
-      drop_mysql_database
     end
     it "does exist" do
       subject.exists?.must_equal true
