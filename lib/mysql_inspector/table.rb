@@ -33,12 +33,12 @@ module MysqlInspector
     # Returns an Array of MysqlInspector::Column.
     def columns
       @columns ||= @lines.map { |line|
-        if line.strip =~ /^#{BACKTICK_WORD} ([\w]+)/
+        if line.strip =~ /^#{BACKTICK_WORD} ([\w\(\)\d]+)/
           name = $1
           sql_type = $2
           nullable = line !~ /NOT NULL/
           default = line[/DEFAULT '([^']+)'/, 1]
-          MysqlInspector::Column.new(name, sql_type, nullable, default)
+          table_part line, MysqlInspector::Column.new(name, sql_type, nullable, default)
         end
       }.compact
     end
@@ -52,7 +52,7 @@ module MysqlInspector
           unique = !!$1
           name = $2
           column_names = backtick_names_in_csv($3)
-          MysqlInspector::Index.new(name, column_names, unique)
+          table_part line, MysqlInspector::Index.new(name, column_names, unique)
         end
       }.compact
     end
@@ -69,12 +69,18 @@ module MysqlInspector
           foreign_column_names = backtick_names_in_csv($4)
           on_delete = $5
           on_update = $6
-          MysqlInspector::Constraint.new(name, column_names, foreign_name, foreign_column_names, on_update, on_delete)
+          table_part line, MysqlInspector::Constraint.new(name, column_names, foreign_name, foreign_column_names, on_update, on_delete)
         end
       }.compact
     end
 
   protected
+
+    def table_part(line, part)
+      part.table = self
+      part.sql_line = line
+      part
+    end
 
     def backtick_names_in_csv(string)
       string.split(',').map { |x| x[BACKTICK_WORD, 1] }

@@ -22,6 +22,13 @@ module MysqlInspector
         @indices.concat find(table.indices)
         @constraints.concat find(table.constraints)
       }
+      @columns.sort!
+      @indices.sort!
+      @constraints.sort!
+    end
+
+    def any_matches?
+      (@columns + @indices + @constraints).any?
     end
 
   protected

@@ -30,11 +30,11 @@ describe MysqlInspector::Table do
   end
 
   it "describes each column" do
-    subject.columns[0].must_equal MysqlInspector::Column.new("first_name", "varchar", false, nil)
-    subject.columns[1].must_equal MysqlInspector::Column.new("id", "int", false, nil)
-    subject.columns[2].must_equal MysqlInspector::Column.new("last_name", "varchar", false, nil)
-    subject.columns[3].must_equal MysqlInspector::Column.new("name", "varchar", false, "toy")
-    subject.columns[4].must_equal MysqlInspector::Column.new("weight", "int", true, nil)
+    subject.columns[0].must_equal MysqlInspector::Column.new("first_name", "varchar(255)", false, nil)
+    subject.columns[1].must_equal MysqlInspector::Column.new("id", "int(11)", false, nil)
+    subject.columns[2].must_equal MysqlInspector::Column.new("last_name", "varchar(255)", false, nil)
+    subject.columns[3].must_equal MysqlInspector::Column.new("name", "varchar(255)", false, "toy")
+    subject.columns[4].must_equal MysqlInspector::Column.new("weight", "int(11)", true, nil)
   end
 
   it "extracts all of the indices" do
