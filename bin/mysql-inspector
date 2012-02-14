@@ -5,90 +5,116 @@ require 'optparse'
 require "mysql_inspector"
 
 options = {
-  :versions => [],
-  :base_dir => ".",
-  :diff => false,
-  :grep => false,
-  :write => false,
-  :clean => false
+  :dir => ".",
+  :version => "current",
+  :command => nil
 }
 
-OptionParser.new do |opts|
-  opts.banner = "Usage: #{File.basename $0} [options]"
+opts = OptionParser.new do |opts|
+  opts.banner = "Usage: #{File.basename $0} [options] command [command args]"
 
-  opts.on("-c", "--current", "Perform the given action(s) with the current version.") do
-    options[:versions] << "current"
+  opts.separator ""
+  opts.separator "Options"
+  opts.separator ""
+
+  opts.on("--db DATABASE", "Operate on DATABASE") do |database|
+    options[:database] = database
   end
 
-  opts.on("-t", "--target", "Perform the given action(s) with the target version.") do
-    options[:versions] << "target"
+  opts.on("--on VERSION", "Perform the given action(s) with the VERSION (current or target).") do |version|
+    options[:version] = version
   end
 
-  opts.on("-w", "--write DB", "Store a schema for the database") do |db_name|
-    options[:write] = db_name
-  end
-
-  opts.on("-f", "--force", "Overwrite a previously stored schema") do |ok|
-    options[:clean] = true
-  end
-
-  opts.on("-d", "--diff", "Output a comparison between the current and target schemas") do |info|
-    options[:diff] = true
-  end
-
-  opts.on("-g", "--grep foo_id,bar_id", "Find columns and/or indices matching the pattern") do |columns|
-    options[:grep] = columns.split(",").collect { |c| c.strip }
-  end
-
-  opts.on("--to DIR", "Where to store schemas. Defaults to '.'") do |dir|
-    options[:base_dir] = dir
+  opts.on("--out DIR", "Where to store schemas. Defaults to '.'") do |dir|
+    options[:dir] = dir
   end
 
   opts.on("-h", "--help", "What you're looking at") do
-    puts opts
+    opts.terminate
   end
 
-  puts opts if ARGV.empty?
+  opts.on("-v", "--version", "Show the version of mysql-inspector") do
+    puts MysqlInspector::VERSION
+    exit
+  end
 
-end.parse!
+  opts.separator ""
+  opts.separator "Commands"
+  opts.separator ""
 
-def how_to_write_version(input)
-  "#{File.basename $0} --#{input.version} --write DB_NAME"
+  opts.separator "  diff"
+  opts.separator "  grep pattern [pattern]"
+  opts.separator ""
 end
 
-begin
+opts.parse!
 
-  options[:versions].collect! do |version|
-    MysqlInspector::Dump.new(version, options[:base_dir])
+abort opts.to_s if ARGV.empty?
+
+@database_name = options[:database] or abort opts.to_s
+@current_version = options[:version] or abort opts.to_s
+
+def dump_name(version)
+  ["mysql", @database_name, version] * "_"
+end
+
+@current_dump_name = dump_name(@current_version)
+
+dump_names = []
+dump_names.concat Dir[File.join(options[:dir], dump_name("*"))].map { |f|
+  regex = Regexp.new("^#{dump_name("(.*)")}$")
+  f[regex, 1]
+}
+dump_names << dump_name(options[:version])
+
+@dumps = {}
+dump_names.compact.uniq.each { |name|
+  path = File.join(options[:dir], name)
+  @dumps[name] = MysqlInspector::Dump.new(path, @database_name)
+}
+
+command = ARGV.shift
+case command
+when "write", "create"
+  dump = @dumps[@current_dump_name]
+  dump.write!
+when "grep"
+  dump = @dumps[@current_dump_name]
+  dump.exists? or abort "Cannot grep because dump #{@current_version.inspect} does not exist"
+
+  matchers = *ARGV.map { |a| Regexp.new(a) }
+  grep = MysqlInspector::Grep.new(dump, matchers)
+  grep.execute
+
+  puts "#{dump.db_name}@#{@current_version}"
+  puts
+  puts "grep #{matchers.map { |m| m.inspect } * " AND "}"
+
+  def format_items(items)
+    items.map { |x| "  #{x.table.table_name}\n    #{x.to_s}" } * "\n"
   end
 
-  if options[:clean]
-    options[:versions].each { |v| v.clean! }
-  end
-
-  if options[:write]
-    raise MysqlInspector::Precondition, "Please specify which version to write" if options[:versions].size == 0
-    raise MysqlInspector::Precondition, "I can only write one version at a time" unless options[:versions].size == 1
-    version = options[:versions].first
-    version.dump!(options[:write])
-  end
-
-  if options[:grep]
-    options[:versions].each do |v|
-      grep = MysqlInspector::Grep.new(v)
-      grep.find(STDOUT, *options[:grep])
+  if grep.any_matches?
+    puts
+    if grep.columns.any?
+      puts "Columns"
+      puts format_items(grep.columns)
+      puts
+    end
+    if grep.indices.any?
+      puts "Indices"
+      puts format_items(grep.indices)
+      puts
+    end
+    if grep.constraints.any?
+      puts "Constraints"
+      puts format_items(grep.constraints)
+      puts
     end
   end
 
-  if options[:diff]
-    inputs = ["current", "target"].collect { |version| MysqlInspector::Dump.new(version, options[:base_dir]) }
-    inputs.each do |input|
-      raise MysqlInspector::Precondition, "No #{input.version} version exists. Write one with `#{how_to_write_version(input)}`" unless input.exists?
-    end
-    comparison = MysqlInspector::Comparison.new(*inputs)
-    comparison.compare(STDOUT)
-  end
-
-rescue MysqlInspector::Precondition => e
-  puts "#{e.message}."
+when "diff"
+  nil
+else
+  abort "Unknown command #{command.inspect}"
 end

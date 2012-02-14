@@ -3,6 +3,7 @@ require 'mysql_inspector'
 
 require 'tempfile'
 require 'open3'
+require 'timecop'
 
 class String
   # Strip left indentation from a string. Call this on a HEREDOC
