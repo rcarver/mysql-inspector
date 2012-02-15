@@ -74,6 +74,10 @@ module MysqlInspector
       }.compact
     end
 
+    def <=>(other)
+      table_name <=> other.table_name
+    end
+
   protected
 
     def table_part(line, part)

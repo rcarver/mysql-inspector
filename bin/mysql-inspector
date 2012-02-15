@@ -90,28 +90,26 @@ when "grep"
   puts
   puts "grep #{matchers.map { |m| m.inspect } * " AND "}"
 
-  def format_items(items)
-    items.map { |x| "  #{x.table.table_name}\n    #{x.to_s}" } * "\n"
+  def format_items(label, items)
+    pad = " " * 4
+    items.each.with_index { |item, i|
+      if i == 0
+        puts [label, pad, item] * ""
+      else
+        puts [" " * label.size, pad, item] * ""
+      end
+    }
   end
 
-  if grep.any_matches?
+  puts if grep.any_matches?
+
+  grep.each_table { |table, subset|
+    puts table.table_name
+    format_items("COL", subset.columns)
+    format_items("IDX", subset.indices)
+    format_items("CST", subset.constraints)
     puts
-    if grep.columns.any?
-      puts "Columns"
-      puts format_items(grep.columns)
-      puts
-    end
-    if grep.indices.any?
-      puts "Indices"
-      puts format_items(grep.indices)
-      puts
-    end
-    if grep.constraints.any?
-      puts "Constraints"
-      puts format_items(grep.constraints)
-      puts
-    end
-  end
+  }
 
 when "diff"
   nil

@@ -28,7 +28,29 @@ module MysqlInspector
     end
 
     def any_matches?
-      (@columns + @indices + @constraints).any?
+      (columns + indices + constraints).any?
+    end
+
+    def tables
+      (columns + indices + constraints).map { |x| x.table }.uniq.sort
+    end
+
+    def each_table
+      tables.each { |t| yield t, in_table(t) }
+    end
+
+    class Subset < Struct.new(:columns, :indices, :constraints)
+      def any_matches?
+        (columns + indices + constraints).any?
+      end
+    end
+
+    def in_table(table)
+      Subset.new(
+        @columns.find_all { |c| c.table == table },
+        @indices.find_all { |i| i.table == table },
+        @constraints.find_all { |c| c.table == table }
+      )
     end
 
   protected

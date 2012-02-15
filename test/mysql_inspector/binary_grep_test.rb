@@ -6,13 +6,16 @@ describe "mysql-inspector grep" do
     create_mysql_database users_and_things_schema
   end
 
-  subject { inspect_database "grep name first" }
+  describe "in general" do
 
-  describe "when no dump exists" do
-    it "tells you" do
-      stderr.must_equal %(Cannot grep because dump "current" does not exist)
-      stdout.must_equal ""
-      status.must_equal 1
+    subject { inspect_database "grep name" }
+
+    describe "when no dump exists" do
+      it "tells you" do
+        stderr.must_equal %(Cannot grep because dump "current" does not exist)
+        stdout.must_equal ""
+        status.must_equal 1
+      end
     end
   end
 
@@ -20,31 +23,81 @@ describe "mysql-inspector grep" do
     before do
       inspect_database "write"
     end
-    it "finds stuff" do
-      stderr.must_equal ""
-      stdout.must_equal <<-EOL.unindented
-        mysql_inspector_test@current
 
-        grep /name/ AND /first/
+    describe "searching for a single term" do
 
-        Columns
+      subject { inspect_database "grep name" }
+
+      it "finds stuff" do
+        stderr.must_equal ""
+        stdout.must_equal <<-EOL.unindented
+          mysql_inspector_test@current
+
+          grep /name/
+
           things
-            `first_name` varchar(255) NOT NULL
+          COL    `first_name` varchar(255) NOT NULL
+                 `last_name` varchar(255) NOT NULL
+                 `name` varchar(255) NOT NULL DEFAULT 'toy'
+          IDX    KEY `name` (`first_name`,`last_name`)
+          CST    CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
+
           users
-            `first_name` varchar(255) NOT NULL
+          COL    `first_name` varchar(255) NOT NULL
+                 `last_name` varchar(255) NOT NULL
+          IDX    KEY `name` (`first_name`,`last_name`)
 
-        Indices
+        EOL
+        status.must_equal 0
+      end
+    end
+
+    describe "anchoring the seach term" do
+
+      subject { inspect_database "grep '^name'" }
+
+      it "finds stuff" do
+        stderr.must_equal ""
+        stdout.must_equal <<-EOL.unindented
+          mysql_inspector_test@current
+
+          grep /^name/
+
           things
-            KEY `name` (`first_name`,`last_name`)
+          COL    `name` varchar(255) NOT NULL DEFAULT 'toy'
+          IDX    KEY `name` (`first_name`,`last_name`)
+
           users
-            KEY `name` (`first_name`,`last_name`)
+          IDX    KEY `name` (`first_name`,`last_name`)
 
-        Constraints
+        EOL
+        status.must_equal 0
+      end
+    end
+
+    describe "searching for multiple terms" do
+
+      subject { inspect_database "grep name first" }
+
+      it "finds stuff" do
+        stderr.must_equal ""
+        stdout.must_equal <<-EOL.unindented
+          mysql_inspector_test@current
+
+          grep /name/ AND /first/
+
           things
-            CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
-      EOL
-      status.must_equal 0
+          COL    `first_name` varchar(255) NOT NULL
+          IDX    KEY `name` (`first_name`,`last_name`)
+          CST    CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
+
+          users
+          COL    `first_name` varchar(255) NOT NULL
+          IDX    KEY `name` (`first_name`,`last_name`)
+
+        EOL
+        status.must_equal 0
+      end
     end
   end
-
 end
