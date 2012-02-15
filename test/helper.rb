@@ -2,7 +2,6 @@ require 'minitest/autorun'
 require 'mysql_inspector'
 
 require 'tempfile'
-require 'open3'
 require 'timecop'
 
 class String

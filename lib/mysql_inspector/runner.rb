@@ -11,10 +11,8 @@ module MysqlInspector
 
     def self.mysqldump(*args)
       all_args = ["-u #{mysql_user}"] + args
-      Command.new(mysqldump_path, *all_args).run!
+      Command.new(mysqldump_path, *all_args)
     end
-
-  protected
 
     def self.mysqldump_path
       @mysqldump_path ||= begin
@@ -23,6 +21,8 @@ module MysqlInspector
         path
       end
     end
+
+    CommandError = Class.new(StandardError)
 
     class Command
 
@@ -36,7 +36,8 @@ module MysqlInspector
       end
 
       def run!
-        system to_s
+        stdout, stderr, status = Open3.capture3(to_s)
+        raise CommandError, stderr unless status.exitstatus == 0
       end
     end
 

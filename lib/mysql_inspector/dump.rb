@@ -1,6 +1,8 @@
 module MysqlInspector
   class Dump
 
+    WriteError = Class.new(StandardError)
+
     def initialize(dir, db_name)
       # TODO: sanity check dir for either a relative dir or /tmp/...
       @dir = dir
@@ -47,7 +49,17 @@ module MysqlInspector
     def write!
       clean! if exists?
       FileUtils.mkdir_p(dir)
-      Runner.mysqldump("--no-data", "-T #{dir}", "--skip-opt", @db_name)
+      command = Runner.mysqldump("--no-data", "-T #{dir}", "--skip-opt", @db_name)
+      begin
+        command.run!
+      rescue Runner::CommandError => e
+        case e.message
+        when /1049: Unknown database/
+          raise WriteError, "The database #{@db_name} does not exist"
+        else
+          raise WriteError, e.message
+        end
+      end
       File.open(@info_file, "w") { |f| f.print(Time.now.utc.to_s) }
     end
 

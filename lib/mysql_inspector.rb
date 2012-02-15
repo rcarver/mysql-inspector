@@ -1,4 +1,5 @@
 require "fileutils"
+require 'open3'
 require "time"
 
 require "mysql_inspector/version"

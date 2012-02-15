@@ -77,7 +77,11 @@ command = ARGV.shift
 case command
 when "write", "create"
   dump = @dumps[@current_dump_name]
-  dump.write!
+  begin
+    dump.write!
+  rescue MysqlInspector::Dump::WriteError => e
+    abort e.message
+  end
 when "grep"
   dump = @dumps[@current_dump_name]
   dump.exists? or abort "Cannot grep because dump #{@current_version.inspect} does not exist"
