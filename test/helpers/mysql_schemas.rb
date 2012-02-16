@@ -1,3 +1,5 @@
+require 'helpers/string_unindented'
+
 # Sample table schemas used for testing.
 module MysqlSchemas
 

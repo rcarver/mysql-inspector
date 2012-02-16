@@ -6,20 +6,9 @@ require 'mysql_inspector'
 require 'tempfile'
 require 'ostruct'
 
-require 'fixtures/mysql_utils'
-require 'fixtures/mysql_schemas'
-
-class String
-  # Strip left indentation from a string. Call this on a HEREDOC
-  # string to unindent it.
-  def unindented
-    lines = self.split("\n")
-    indent_level = (lines[0][/^(\s*)/, 1] || "").size
-    lines.map { |line|
-      line.sub(/^\s{#{indent_level}}/, '')
-    }.join("\n") + "\n"
-  end
-end
+require 'helpers/mysql_utils'
+require 'helpers/mysql_schemas'
+require 'helpers/string_unindented'
 
 class MysqlInspectorSpec < MiniTest::Spec
   include MysqlSchemas
