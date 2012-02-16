@@ -2,65 +2,6 @@ require 'helper'
 
 describe MysqlInspector::Diff do
 
-  def colors_schema
-    <<-STR.unindented
-      CREATE TABLE `colors` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `name` varchar(255) NOT NULL,
-        UNIQUE KEY `colors_primary` (`id`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-
-  def ideas_schema
-    <<-STR.unindented
-      CREATE TABLE `ideas` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `name` varchar(255) NOT NULL,
-        `description` text NOT NULL,
-        UNIQUE KEY `ideas_primary` (`id`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-
-  def users_schema
-    <<-STR.unindented
-      CREATE TABLE `users` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        UNIQUE KEY `users_primary` (`id`),
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-
-  def things_schema_1
-    <<-STR.unindented
-      CREATE TABLE `things` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `name` varchar(255) NOT NULL DEFAULT 'toy',
-        `weight` int(11) NULL,
-        `color` varchar(255) NULL,
-        UNIQUE KEY `things_primary` (`id`),
-        KEY `weight` (`weight`)
-        CONSTRAINT `belongs_to_color` FOREIGN KEY (`color`) REFERENCES `colors` (`name`) ON DELETE NO ACTION ON UPDATE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-
-  def things_schema_2
-    <<-STR.unindented
-      CREATE TABLE `things` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `name` varchar(255) NOT NULL DEFAULT 'toy',
-        `weight` int(11) NULL,
-        `first_name` varchar(255) NOT NULL,
-        `last_name` varchar(255) NOT NULL,
-        UNIQUE KEY `things_primary` (`id`),
-        KEY `name` (`first_name`,`last_name`),
-        CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-
   let(:current_dump) do
     mock = MiniTest::Mock.new
     mock.expect :tables, [
@@ -128,7 +69,7 @@ describe MysqlInspector::Diff do
       names(table.added_indices).must_equal ["name"]
 
       it "finds the indices that are missing"
-      names(table.missing_indices).must_equal ["weight"]
+      names(table.missing_indices).must_equal ["color"]
 
       it "finds the constraints that are added"
       names(table.added_constraints).must_equal ["belongs_to_user"]

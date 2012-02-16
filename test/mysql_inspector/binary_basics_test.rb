@@ -22,7 +22,7 @@ describe "mysql-inspector -h" do
       Options
 
               --db DATABASE                Operate on DATABASE
-              --on VERSION                 Perform the given action(s) with the VERSION (current or target).
+              --to VERSION                 Perform the given action(s) with the VERSION (current or target).
               --out DIR                    Where to store schemas. Defaults to '.'
           -h, --help                       What you're looking at
           -v, --version                    Show the version of mysql-inspector

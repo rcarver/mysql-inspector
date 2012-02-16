@@ -72,6 +72,10 @@ module MysqlInspector
       def missing_constraints
         @current_table.constraints - @target_table.constraints
       end
+
+      def <=>(other)
+        table_name <=> other.table_name
+      end
     end
 
   end

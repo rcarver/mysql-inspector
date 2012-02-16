@@ -21,7 +21,7 @@ opts = OptionParser.new do |opts|
     options[:database] = database
   end
 
-  opts.on("--on VERSION", "Perform the given action(s) with the VERSION (current or target).") do |version|
+  opts.on("--to VERSION", "Perform the given action(s) with the VERSION (current or target).") do |version|
     options[:version] = version
   end
 
@@ -58,33 +58,45 @@ def dump_name(version)
   ["mysql", @database_name, version] * "_"
 end
 
-@current_dump_name = dump_name(@current_version)
-
 dump_names = []
 dump_names.concat Dir[File.join(options[:dir], dump_name("*"))].map { |f|
   regex = Regexp.new("^#{dump_name("(.*)")}$")
-  f[regex, 1]
+  name = File.basename(f)
+  name[regex, 1]
 }
-dump_names << dump_name(options[:version])
+dump_names << options[:version]
 
 @dumps = {}
 dump_names.compact.uniq.each { |name|
-  path = File.join(options[:dir], name)
+  path = File.join(options[:dir], dump_name(name))
   @dumps[name] = MysqlInspector::Dump.new(path, @database_name)
 }
+
+# Print table details
+def format_items(label, items, &formatter)
+  pad = " " * 4
+  formatter ||= proc { |item | item }
+  items.each.with_index { |item, i|
+    if i == 0
+      puts [label, pad, formatter.call(item)] * ""
+    else
+      puts [" " * label.size, pad, formatter.call(item)] * ""
+    end
+  }
+end
 
 command = ARGV.shift
 case command
 when "write", "create"
-  dump = @dumps[@current_dump_name]
+  dump = @dumps[@current_version]
   begin
     dump.write!
   rescue MysqlInspector::Dump::WriteError => e
     abort e.message
   end
 when "grep"
-  dump = @dumps[@current_dump_name]
-  dump.exists? or abort "Cannot grep because dump #{@current_version.inspect} does not exist"
+  dump = @dumps[@current_version]
+  dump && dump.exists? or abort "Cannot grep because dump #{@current_version.inspect} does not exist"
 
   matchers = *ARGV.map { |a| Regexp.new(a) }
   grep = MysqlInspector::Grep.new(dump, matchers)
@@ -93,17 +105,6 @@ when "grep"
   puts "#{dump.db_name}@#{@current_version}"
   puts
   puts "grep #{matchers.map { |m| m.inspect } * " AND "}"
-
-  def format_items(label, items)
-    pad = " " * 4
-    items.each.with_index { |item, i|
-      if i == 0
-        puts [label, pad, item] * ""
-      else
-        puts [" " * label.size, pad, item] * ""
-      end
-    }
-  end
 
   puts if grep.any_matches?
 
@@ -116,7 +117,47 @@ when "grep"
   }
 
 when "diff"
-  nil
+  dump1 = @dumps["current"]
+  dump1 && dump1.exists? or abort "Cannot diff because no current dump exists"
+  dump2 = @dumps["target"]
+  dump2 && dump2.exists? or abort "Cannot diff because no target dump exists"
+
+  diff = MysqlInspector::Diff.new(dump1, dump2)
+  diff.execute
+
+  puts "diff #{dump1.db_name}@current #{dump2.db_name}@target"
+
+  def prefix_for_table(table, diff)
+    case
+    when diff.added_tables.include?(table) then "+"
+    when diff.missing_tables.include?(table) then "-"
+    else "="
+    end
+  end
+
+  def format_diff_items(label, added, removed)
+    format_items(label, (added + removed).sort) { |item|
+      prefix = added.include?(item) ? "+" : "-"
+      "#{prefix} #{item}"
+    }
+  end
+
+  tables = diff.added_tables + diff.missing_tables + diff.different_tables
+
+  if tables.any?
+    puts
+    tables.sort.each do |t|
+      prefix = prefix_for_table(t, diff)
+      puts "#{prefix} #{t.table_name}"
+      if t.is_a?(MysqlInspector::Diff::TableDiff)
+        format_diff_items("  COL", t.added_columns, t.missing_columns)
+        format_diff_items("  IDX", t.added_indices, t.missing_indices)
+        format_diff_items("  CST", t.added_constraints, t.missing_constraints)
+      end
+    end
+    puts
+  end
+
 else
   abort "Unknown command #{command.inspect}"
 end
