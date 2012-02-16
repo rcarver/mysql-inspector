@@ -25,6 +25,21 @@ class SystemCall
 end
 
 module Schemas
+  # A database with two related tables - users, and things.
+  def users_and_things_schema
+    <<-STR.unindented
+      CREATE TABLE `users` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `first_name` varchar(255) NOT NULL,
+        `last_name` varchar(255) NOT NULL,
+        UNIQUE KEY `users_primary` (`id`),
+        KEY `name` (`first_name`,`last_name`)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+      #{things_schema}
+    STR
+  end
+  # The things table from users_and_things_schema
   def things_schema
     <<-STR.unindented
       CREATE TABLE `things` (
@@ -37,19 +52,6 @@ module Schemas
         KEY `name` (`first_name`,`last_name`),
         CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-  def users_and_things_schema
-    <<-STR.unindented
-      CREATE TABLE `users` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `first_name` varchar(255) NOT NULL,
-        `last_name` varchar(255) NOT NULL,
-        UNIQUE KEY `users_primary` (`id`),
-        KEY `name` (`first_name`,`last_name`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-      #{things_schema}
     STR
   end
 end
