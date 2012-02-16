@@ -8,8 +8,7 @@ CURRENT = "current"
 TARGET  = "target"
 
 @options = {
-  :dir => ".",
-  :database => nil
+  :dir => "."
 }
 
 @opts = OptionParser.new do |opts|
@@ -18,14 +17,6 @@ TARGET  = "target"
   opts.separator ""
   opts.separator "Options"
   opts.separator ""
-
-  opts.on("--db DATABASE", "Operate on DATABASE") do |database|
-    @options[:database] = database
-  end
-
-  #opts.on("--to VERSION", "Perform the given action(s) with the VERSION (current or target).") do |version|
-    #options[:version] = version
-  #end
 
   opts.on("--out DIR", "Where to store schemas. Defaults to '.'") do |dir|
     @options[:dir] = dir
@@ -56,26 +47,6 @@ end
 
 abort @opts.to_s if ARGV.empty?
 
-@database_name = @options[:database] or abort @opts.to_s
-
-def dump_name(version)
-  ["mysql", @database_name, version] * "_"
-end
-
-#dump_names = []
-#dump_names.concat Dir[File.join(options[:dir], dump_name("*"))].map { |f|
-  #regex = Regexp.new("^#{dump_name("(.*)")}$")
-  #name = File.basename(f)
-  #name[regex, 1]
-#}
-#dump_names << options[:version]
-
-#@dumps = {}
-#dump_names.compact.uniq.each { |name|
-  #path = File.join(options[:dir], dump_name(name))
-  #@dumps[name] = MysqlInspector::Dump.new(path, @database_name)
-#}
-
 # Print table details
 def format_items(label, items, &formatter)
   pad = " " * 4
@@ -94,14 +65,14 @@ def usage(msg)
 end
 
 def create_dump(name)
-  path = File.join(@options[:dir], dump_name(name))
+  path = File.join(@options[:dir], name)
   MysqlInspector::Dump.new(path)
 end
 
 command = ARGV.shift
 case command
 
-when "write", "create"
+when "write"
   database = ARGV.shift or usage "write DATABASE [VERSION]"
   version  = ARGV.shift || CURRENT
   dump = create_dump(version)

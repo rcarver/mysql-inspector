@@ -84,7 +84,7 @@ class MysqlInspectorBinarySpec < MysqlInspectorSpec
   end
 
   def inspect_database(args)
-    mysql_inspector "--db #{database_name} --out #{tmpdir} #{args}"
+    mysql_inspector "--out #{tmpdir} #{args}"
   end
 
   def stdout

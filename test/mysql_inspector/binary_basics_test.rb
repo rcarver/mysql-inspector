@@ -21,7 +21,6 @@ describe "mysql-inspector -h" do
 
       Options
 
-              --db DATABASE                Operate on DATABASE
               --out DIR                    Where to store schemas. Defaults to '.'
           -h, --help                       What you're looking at
           -v, --version                    Show the version of mysql-inspector
