@@ -21,7 +21,7 @@ describe "mysql-inspector grep" do
 
   describe "when a dump exists" do
     before do
-      inspect_database "write"
+      inspect_database "write #{database_name}"
     end
 
     describe "searching for a single term" do

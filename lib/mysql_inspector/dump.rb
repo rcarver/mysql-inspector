@@ -53,6 +53,7 @@ module MysqlInspector
       begin
         command.run!
       rescue Runner::CommandError => e
+        FileUtils.rm_rf(dir) # note this does not remove all the dirs that may have been created.
         case e.message
         when /1049: Unknown database/
           raise WriteError, "The database #{@db_name} does not exist"

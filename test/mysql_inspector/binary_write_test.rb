@@ -2,34 +2,60 @@ require 'helper'
 
 describe "mysql-inspector write" do
 
-  subject { inspect_database "write" }
+  describe "when you don't specify a database" do
 
-  let(:dirname) { "#{tmpdir}/mysql_#{database_name}_current" }
-
-  describe "when the database does not exist" do
+    subject { inspect_database "write" }
     it "fails" do
       stdout.must_equal ""
-      stderr.must_equal "The database mysql_inspector_test does not exist"
+      stderr.must_equal "Usage: mysql-inspector write DATABASE [VERSION]"
       status.must_equal 1
-    end
-    it "does not create a directory" do
-      File.directory?(dirname).must_equal false
     end
   end
 
-  describe "when the database exists" do
-    before do
-      create_mysql_database schema_a
+  describe "by default" do
+
+    subject { inspect_database "write #{database_name}" }
+
+    let(:dirname) { "#{tmpdir}/mysql_#{database_name}_current" }
+
+    specify "when the database does not exist" do
+      it "fails"
+      stdout.must_equal ""
+      stderr.must_equal "The database mysql_inspector_test does not exist"
+      status.must_equal 1
+
+      it "does not create a directory"
+      File.directory?(dirname).must_equal false
     end
-    it "succeeds" do
+
+    specify "when the database exists" do
+      create_mysql_database schema_a
+
+      it "succeeds"
       stdout.must_equal ""
       stderr.must_equal ""
       status.must_equal 0
-    end
-    it "creates a directory and files" do
-      subject.wont_be_nil
+
+      it "creates a directory and files"
       File.directory?(dirname).must_equal true
       Dir.glob(dirname + "/*.sql").size.must_equal 3
+    end
+  end
+
+  describe "writing another version" do
+
+    subject { inspect_database "write #{database_name} target" }
+
+    let(:dirname) { "#{tmpdir}/mysql_#{database_name}_target" }
+
+    it "creates a directory and files" do
+      create_mysql_database schema_a
+
+      stdout.must_equal ""
+      stderr.must_equal ""
+      status.must_equal 0
+
+      File.directory?(dirname).must_equal true
     end
   end
 end

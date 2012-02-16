@@ -4,13 +4,15 @@ $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 require 'optparse'
 require "mysql_inspector"
 
-options = {
+CURRENT = "current"
+TARGET  = "target"
+
+@options = {
   :dir => ".",
-  :version => "current",
-  :command => nil
+  :database => nil
 }
 
-opts = OptionParser.new do |opts|
+@opts = OptionParser.new do |opts|
   opts.banner = "Usage: #{File.basename $0} [options] command [command args]"
 
   opts.separator ""
@@ -18,15 +20,15 @@ opts = OptionParser.new do |opts|
   opts.separator ""
 
   opts.on("--db DATABASE", "Operate on DATABASE") do |database|
-    options[:database] = database
+    @options[:database] = database
   end
 
-  opts.on("--to VERSION", "Perform the given action(s) with the VERSION (current or target).") do |version|
-    options[:version] = version
-  end
+  #opts.on("--to VERSION", "Perform the given action(s) with the VERSION (current or target).") do |version|
+    #options[:version] = version
+  #end
 
   opts.on("--out DIR", "Where to store schemas. Defaults to '.'") do |dir|
-    options[:dir] = dir
+    @options[:dir] = dir
   end
 
   opts.on("-h", "--help", "What you're looking at") do
@@ -42,35 +44,37 @@ opts = OptionParser.new do |opts|
   opts.separator "Commands"
   opts.separator ""
 
+  opts.separator "  write DATABASE [VERSION]"
   opts.separator "  diff"
-  opts.separator "  grep pattern [pattern]"
+  opts.separator "  diff TO"
+  opts.separator "  diff FROM TO"
+  opts.separator "  grep PATTERN [PATTERN]"
   opts.separator ""
 end
 
-opts.parse!
+@opts.parse!
 
-abort opts.to_s if ARGV.empty?
+abort @opts.to_s if ARGV.empty?
 
-@database_name = options[:database] or abort opts.to_s
-@current_version = options[:version] or abort opts.to_s
+@database_name = @options[:database] or abort @opts.to_s
 
 def dump_name(version)
   ["mysql", @database_name, version] * "_"
 end
 
-dump_names = []
-dump_names.concat Dir[File.join(options[:dir], dump_name("*"))].map { |f|
-  regex = Regexp.new("^#{dump_name("(.*)")}$")
-  name = File.basename(f)
-  name[regex, 1]
-}
-dump_names << options[:version]
+#dump_names = []
+#dump_names.concat Dir[File.join(options[:dir], dump_name("*"))].map { |f|
+  #regex = Regexp.new("^#{dump_name("(.*)")}$")
+  #name = File.basename(f)
+  #name[regex, 1]
+#}
+#dump_names << options[:version]
 
-@dumps = {}
-dump_names.compact.uniq.each { |name|
-  path = File.join(options[:dir], dump_name(name))
-  @dumps[name] = MysqlInspector::Dump.new(path, @database_name)
-}
+#@dumps = {}
+#dump_names.compact.uniq.each { |name|
+  #path = File.join(options[:dir], dump_name(name))
+  #@dumps[name] = MysqlInspector::Dump.new(path, @database_name)
+#}
 
 # Print table details
 def format_items(label, items, &formatter)
@@ -85,11 +89,22 @@ def format_items(label, items, &formatter)
   }
 end
 
+def usage(msg)
+  abort "Usage: #{@opts.program_name} #{msg}"
+end
+
+def create_dump(name)
+  path = File.join(@options[:dir], dump_name(name))
+  MysqlInspector::Dump.new(path, @database_name)
+end
+
 command = ARGV.shift
 case command
 
 when "write", "create"
-  dump = @dumps[@current_version]
+  database = ARGV.shift or usage "write DATABASE [VERSION]"
+  version  = ARGV.shift || CURRENT
+  dump = create_dump(version)
   begin
     dump.write!
   rescue MysqlInspector::Dump::WriteError => e
@@ -97,14 +112,14 @@ when "write", "create"
   end
 
 when "grep"
-  dump = @dumps[@current_version]
-  dump && dump.exists? or abort "Cannot grep because dump #{@current_version.inspect} does not exist"
+  dump = create_dump(CURRENT)
+  dump.exists? or abort "Cannot grep because dump #{CURRENT.inspect} does not exist"
 
   matchers = *ARGV.map { |a| Regexp.new(a) }
   grep = MysqlInspector::Grep.new(dump, matchers)
   grep.execute
 
-  puts "#{dump.db_name}@#{@current_version}"
+  puts "#{dump.db_name}@#{CURRENT}"
   puts
   puts "grep #{matchers.map { |m| m.inspect } * " AND "}"
 
@@ -119,15 +134,15 @@ when "grep"
   }
 
 when "diff"
-  dump1 = @dumps["current"]
-  dump1 && dump1.exists? or abort "Cannot diff because no current dump exists"
-  dump2 = @dumps["target"]
-  dump2 && dump2.exists? or abort "Cannot diff because no target dump exists"
+  dump1 = create_dump(CURRENT)
+  dump1.exists? or abort "Cannot diff because no #{CURRENT.inspect} dump exists"
+  dump2 = create_dump(TARGET)
+  dump2.exists? or abort "Cannot diff because no #{TARGET.inspect} dump exists"
 
   diff = MysqlInspector::Diff.new(dump1, dump2)
   diff.execute
 
-  puts "diff #{dump1.db_name}@current #{dump2.db_name}@target"
+  puts "diff #{dump1.db_name}@#{CURRENT} #{dump2.db_name}@#{TARGET}"
 
   def prefix_for_table(table, diff)
     case
