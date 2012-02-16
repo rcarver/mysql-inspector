@@ -2,11 +2,11 @@ require 'helper'
 
 describe "mysql-inspector diff" do
 
-  before do
-    create_mysql_database users_and_things_schema
-  end
-
   describe "in general" do
+
+    before do
+      create_mysql_database schema_a
+    end
 
     subject { inspect_database "diff" }
 
@@ -29,6 +29,7 @@ describe "mysql-inspector diff" do
   end
 
   describe "when two dumps exist to compare" do
+
     before do
       create_mysql_database schema_a
       inspect_database "--to current write"

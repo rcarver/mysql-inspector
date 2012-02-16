@@ -75,12 +75,5 @@ module MysqlSchemas
   def things_schema
     things_schema_2
   end
-
-  def users_and_things_schema
-    <<-STR.unindented
-      #{users_schema}
-      #{things_schema}
-    STR
-  end
 end
 

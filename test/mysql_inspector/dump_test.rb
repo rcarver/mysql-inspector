@@ -36,9 +36,7 @@ describe MysqlInspector::Dump do
 
   describe "when written but a database does not exist" do
     it "fails" do
-      proc {
-        subject.write!
-      }.must_raise MysqlInspector::Dump::WriteError
+      proc { subject.write! }.must_raise MysqlInspector::Dump::WriteError
     end
   end
 end

@@ -19,7 +19,7 @@ describe "mysql-inspector write" do
 
   describe "when the database exists" do
     before do
-      create_mysql_database users_and_things_schema
+      create_mysql_database schema_a
     end
     it "succeeds" do
       stdout.must_equal ""
@@ -29,7 +29,7 @@ describe "mysql-inspector write" do
     it "creates a directory and files" do
       subject.wont_be_nil
       File.directory?(dirname).must_equal true
-      Dir.glob(dirname + "/*.sql").size.must_equal 2
+      Dir.glob(dirname + "/*.sql").size.must_equal 3
     end
   end
 end
