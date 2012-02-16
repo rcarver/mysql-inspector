@@ -73,9 +73,11 @@ class MysqlInspectorSpec < MiniTest::Spec
   # Create a temporary directory. This directory will exist for the life of
   # the spec.
   #
+  # id - Identifier of the tmpdir (default: the default identifier).
+  #
   # Returns a String.
-  def tmpdir
-    @tmpdir ||= Dir.mktmpdir
+  def tmpdir(id=:default)
+    @tmpdirs[id] ||= Dir.mktmpdir
   end
 
   # Get the name of the test database.
@@ -103,12 +105,12 @@ class MysqlInspectorSpec < MiniTest::Spec
   end
 
   before do
-    @tmpdir = nil
+    @tmpdirs = {}
     @mysql_database = nil
   end
 
   after do
-    FileUtils.rm_rf @tmpdir if @tmpdir
+    @tmpdirs.values.each { |dir| FileUtils.rm_rf dir }
     drop_mysql_database if @mysql_database
   end
 
