@@ -74,6 +74,15 @@ module MysqlInspector
       }.compact
     end
 
+    def eql?(other)
+      table_name == other.table_name &&
+          columns == other.columns &&
+          indices == other.indices &&
+          constraints == other.constraints
+    end
+
+    alias == eql?
+
     def <=>(other)
       table_name <=> other.table_name
     end

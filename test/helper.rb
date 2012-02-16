@@ -1,4 +1,6 @@
 require 'minitest/autorun'
+require 'minitest/mock'
+
 require 'mysql_inspector'
 
 require 'tempfile'
