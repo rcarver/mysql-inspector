@@ -1,10 +1,9 @@
 require 'minitest/autorun'
 require 'minitest/mock'
+require 'open3'
+require 'ostruct'
 
 require 'mysql_inspector'
-
-require 'tempfile'
-require 'ostruct'
 
 require 'helpers/mysql_utils'
 require 'helpers/mysql_schemas'

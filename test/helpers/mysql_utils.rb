@@ -1,4 +1,5 @@
 require 'open3'
+require 'tempfile'
 
 module MysqlUtils
   extend self
