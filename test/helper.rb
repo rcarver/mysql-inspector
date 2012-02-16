@@ -4,7 +4,10 @@ require 'minitest/mock'
 require 'mysql_inspector'
 
 require 'tempfile'
-require 'timecop'
+require 'ostruct'
+
+require 'fixtures/mysql_utils'
+require 'fixtures/mysql_schemas'
 
 class String
   # Strip left indentation from a string. Call this on a HEREDOC
@@ -18,84 +21,8 @@ class String
   end
 end
 
-class SystemCall
-  def initialize(command)
-    @stdout, @stderr, status = Open3.capture3(command)
-    @status = status.exitstatus
-  end
-  attr_reader :stdout, :stderr, :status
-end
-
-module Schemas
-  def colors_schema
-    <<-STR.unindented
-      CREATE TABLE `colors` (
-        `name` varchar(255) NOT NULL,
-        UNIQUE KEY `colors_primary` (`name`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-  def ideas_schema
-    <<-STR.unindented
-      CREATE TABLE `ideas` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `name` varchar(255) NOT NULL,
-        `description` text NOT NULL,
-        UNIQUE KEY `ideas_primary` (`id`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-  def users_schema
-    <<-STR.unindented
-      CREATE TABLE `users` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `first_name` varchar(255) NOT NULL,
-        `last_name` varchar(255) NOT NULL,
-        UNIQUE KEY `users_primary` (`id`),
-        KEY `name` (`first_name`,`last_name`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-  def things_schema_1
-    <<-STR.unindented
-      CREATE TABLE `things` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `name` varchar(255) NOT NULL DEFAULT 'toy',
-        `weight` int(11) NULL,
-        `color` varchar(255) NOT NULL,
-        UNIQUE KEY `things_primary` (`id`),
-        KEY `color` (`color`),
-        CONSTRAINT `belongs_to_color` FOREIGN KEY (`color`) REFERENCES `colors` (`name`) ON DELETE NO ACTION ON UPDATE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-  def things_schema_2
-    <<-STR.unindented
-      CREATE TABLE `things` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `name` varchar(255) NOT NULL DEFAULT 'toy',
-        `weight` int(11) NULL,
-        `first_name` varchar(255) NOT NULL,
-        `last_name` varchar(255) NOT NULL,
-        UNIQUE KEY `things_primary` (`id`),
-        KEY `name` (`first_name`,`last_name`),
-        CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    STR
-  end
-  def things_schema
-    things_schema_2
-  end
-  def users_and_things_schema
-    <<-STR.unindented
-      #{users_schema}
-      #{things_schema}
-    STR
-  end
-end
-
 class MysqlInspectorSpec < MiniTest::Spec
-  include Schemas
+  include MysqlSchemas
 
   def it msg
     raise "A block must not be passed to the example-level +it+" if block_given?
@@ -133,13 +60,7 @@ class MysqlInspectorSpec < MiniTest::Spec
   # Returns nothing.
   def create_mysql_database(schema)
     @mysql_database = true
-    drop_mysql_database
-    syscall "echo 'CREATE DATABASE #{database_name}' | #{mysql_command}"
-    Tempfile.open('schema') do |file|
-      file.puts(schema)
-      file.flush
-      syscall "cat #{file.path} | #{mysql_command} #{database_name}"
-    end
+    MysqlUtils.create_mysql_database(database_name, schema)
   end
 
   before do
@@ -149,30 +70,7 @@ class MysqlInspectorSpec < MiniTest::Spec
 
   after do
     @tmpdirs.values.each { |dir| FileUtils.rm_rf dir }
-    drop_mysql_database if @mysql_database
-  end
-
- protected
-
-  def self.mysql_command
-    @mysql_command ||= begin
-      path = `which mysql`.chomp
-      raise "mysql is not in your PATH" if path.empty?
-      "#{path} -uroot"
-    end
-  end
-
-  def mysql_command
-    self.class.mysql_command
-  end
-
-  def syscall(command)
-    result = SystemCall.new(command)
-    raise "FAILED:\n\nstdout:\n#{result.stdout}\n\nstderr:\n#{result.stderr}" unless result.status == 0
-  end
-
-  def drop_mysql_database
-    syscall "echo 'DROP DATABASE IF EXISTS #{database_name}' | #{mysql_command}"
+    MysqlUtils.drop_mysql_database(database_name) if @mysql_database
   end
 end
 
@@ -181,7 +79,8 @@ class MysqlInspectorBinarySpec < MysqlInspectorSpec
   register_spec_type(self) { |desc| desc =~ /mysql-inspector/ }
 
   def mysql_inspector(args)
-    SystemCall.new "mysql-inspector #{args}"
+    stdout, stderr, status = Open3.capture3("mysql-inspector #{args}")
+    OpenStruct.new(:stdout => stdout, :stderr => stderr, :status => status.exitstatus)
   end
 
   def inspect_database(args)

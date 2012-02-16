@@ -30,9 +30,9 @@ describe "mysql-inspector diff" do
 
   describe "when two dumps exist to compare" do
     before do
-      create_mysql_database ideas_schema + colors_schema + things_schema_1
+      create_mysql_database schema_a
       inspect_database "--to current write"
-      create_mysql_database users_schema + ideas_schema + things_schema_2
+      create_mysql_database schema_b
       inspect_database "--to target write"
     end
 

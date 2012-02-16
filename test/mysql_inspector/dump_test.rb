@@ -20,17 +20,25 @@ describe MysqlInspector::Dump do
 
   describe "when written" do
     before do
-      create_mysql_database(users_and_things_schema)
+      create_mysql_database(schema_a)
       subject.write!
     end
     it "does exist" do
-      subject.exists?.must_equal true
+      subject.must_be :exists?
     end
     it "has a timestamp" do
       subject.timestamp.to_i.must_equal Time.now.utc.to_i
     end
     it "has tables" do
-      subject.tables.size.must_equal 2
+      subject.tables.size.must_equal 3
+    end
+  end
+
+  describe "when written but a database does not exist" do
+    it "fails" do
+      proc {
+        subject.write!
+      }.must_raise MysqlInspector::Dump::WriteError
     end
   end
 end

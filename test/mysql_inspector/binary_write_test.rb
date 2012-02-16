@@ -9,7 +9,7 @@ describe "mysql-inspector write" do
   describe "when the database does not exist" do
     it "fails" do
       stdout.must_equal ""
-      stderr.must_equal "The database #{database_name} does not exist"
+      stderr.must_equal "The database mysql_inspector_test does not exist"
       status.must_equal 1
     end
     it "does not create a directory" do
