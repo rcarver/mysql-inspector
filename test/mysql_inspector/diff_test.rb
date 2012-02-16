@@ -1,6 +1,6 @@
 require 'helper'
 
-describe MysqlInspector::Comparison do
+describe MysqlInspector::Diff do
 
   def colors_schema
     <<-STR.unindented
@@ -82,7 +82,7 @@ describe MysqlInspector::Comparison do
   end
 
   subject do
-    MysqlInspector::Comparison.new(current_dump, target_dump)
+    MysqlInspector::Diff.new(current_dump, target_dump)
   end
 
   before do

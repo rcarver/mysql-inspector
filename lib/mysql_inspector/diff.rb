@@ -1,5 +1,5 @@
 module MysqlInspector
-  class Comparison
+  class Diff
 
     def initialize(current_dump, target_dump)
       @current_dump = current_dump
@@ -27,7 +27,7 @@ module MysqlInspector
           if target == current
             @equal_tables << target
           else
-            @different_tables << TableComparison.new(target, current)
+            @different_tables << TableDiff.new(target, current)
           end
         else
           @added_tables << target if target_tables.has_key?(n)
@@ -38,7 +38,7 @@ module MysqlInspector
 
   protected
 
-    class TableComparison
+    class TableDiff
 
       def initialize(target_table, current_table)
         @target_table = target_table
