@@ -3,10 +3,8 @@ module MysqlInspector
 
     WriteError = Class.new(StandardError)
 
-    def initialize(dir, db_name)
-      # TODO: sanity check dir for either a relative dir or /tmp/...
+    def initialize(dir)
       @dir = dir
-      @db_name = db_name
       @info_file = File.join(dir, ".info")
     end
 
@@ -15,17 +13,18 @@ module MysqlInspector
     # Returns a String.
     attr_reader :dir
 
-    # Public: Get the name of the database being dumped.
-    #
-    # Returns a String.
-    attr_reader :db_name
-
     # Public: Get the time that this dump was created.
     #
     # Returns a Time
     def timestamp
       if exists?
         Time.parse(File.read(@info_file).strip)
+      end
+    end
+
+    def db_name
+      if exists?
+        "mysql_inspector_test"
       end
     end
 
@@ -45,18 +44,20 @@ module MysqlInspector
 
     # Public: Write to the dump directory. Any existing dump will be deleted.
     #
+    # database_name - String name of the database to store.
+    #
     # Returns nothing.
-    def write!
+    def write!(database_name)
       clean! if exists?
       FileUtils.mkdir_p(dir)
-      command = Runner.mysqldump("--no-data", "-T #{dir}", "--skip-opt", @db_name)
+      command = Runner.mysqldump("--no-data", "-T #{dir}", "--skip-opt", database_name)
       begin
         command.run!
       rescue Runner::CommandError => e
         FileUtils.rm_rf(dir) # note this does not remove all the dirs that may have been created.
         case e.message
         when /1049: Unknown database/
-          raise WriteError, "The database #{@db_name} does not exist"
+          raise WriteError, "The database #{database_name} does not exist"
         else
           raise WriteError, e.message
         end
@@ -70,7 +71,7 @@ module MysqlInspector
     def tables
       Dir[File.join(dir, "*.sql")].map do |file|
         schema = File.read(file)
-        Table.new(@db_name, schema)
+        Table.new(schema)
       end
     end
 

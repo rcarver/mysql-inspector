@@ -95,7 +95,7 @@ end
 
 def create_dump(name)
   path = File.join(@options[:dir], dump_name(name))
-  MysqlInspector::Dump.new(path, @database_name)
+  MysqlInspector::Dump.new(path)
 end
 
 command = ARGV.shift
@@ -106,7 +106,7 @@ when "write", "create"
   version  = ARGV.shift || CURRENT
   dump = create_dump(version)
   begin
-    dump.write!
+    dump.write!(database)
   rescue MysqlInspector::Dump::WriteError => e
     abort e.message
   end

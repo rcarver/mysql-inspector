@@ -8,7 +8,7 @@ describe MysqlInspector::Grep do
     dump
   }
 
-  let(:table) { MysqlInspector::Table.new("test", things_schema) }
+  let(:table) { MysqlInspector::Table.new(things_schema) }
 
   let(:matchers) { [] }
 

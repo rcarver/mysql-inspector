@@ -3,7 +3,7 @@ require 'helper'
 describe MysqlInspector::Dump do
 
   subject do
-    MysqlInspector::Dump.new(tmpdir, database_name)
+    MysqlInspector::Dump.new(tmpdir)
   end
 
   describe "before written" do
@@ -21,7 +21,7 @@ describe MysqlInspector::Dump do
   describe "when written" do
     before do
       create_mysql_database(schema_a)
-      subject.write!
+      subject.write!(database_name)
     end
     it "does exist" do
       subject.must_be :exists?
@@ -36,7 +36,7 @@ describe MysqlInspector::Dump do
 
   describe "when written but a database does not exist" do
     it "fails" do
-      proc { subject.write! }.must_raise MysqlInspector::Dump::WriteError
+      proc { subject.write!(database_name) }.must_raise MysqlInspector::Dump::WriteError
     end
   end
 end

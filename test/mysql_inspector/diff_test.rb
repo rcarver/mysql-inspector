@@ -5,9 +5,9 @@ describe MysqlInspector::Diff do
   let(:current_dump) do
     mock = MiniTest::Mock.new
     mock.expect :tables, [
-      MysqlInspector::Table.new(database_name, ideas_schema),
-      MysqlInspector::Table.new(database_name, colors_schema),
-      MysqlInspector::Table.new(database_name, things_schema_1)
+      MysqlInspector::Table.new(ideas_schema),
+      MysqlInspector::Table.new(colors_schema),
+      MysqlInspector::Table.new(things_schema_1)
     ]
     mock
   end
@@ -15,9 +15,9 @@ describe MysqlInspector::Diff do
   let(:target_dump) do
     mock = MiniTest::Mock.new
     mock.expect :tables, [
-      MysqlInspector::Table.new(database_name, users_schema),
-      MysqlInspector::Table.new(database_name, ideas_schema),
-      MysqlInspector::Table.new(database_name, things_schema_2)
+      MysqlInspector::Table.new(users_schema),
+      MysqlInspector::Table.new(ideas_schema),
+      MysqlInspector::Table.new(things_schema_2)
     ]
     mock
   end

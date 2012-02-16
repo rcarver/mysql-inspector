@@ -3,7 +3,7 @@ require 'helper'
 describe MysqlInspector::Table do
 
   subject do
-    MysqlInspector::Table.new("test", things_schema)
+    MysqlInspector::Table.new(things_schema)
   end
 
   it "knows the table name" do

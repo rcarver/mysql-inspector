@@ -5,18 +5,12 @@ module MysqlInspector
     BACKTICK_CSV = /\(([^\)]+)\)/
     REFERENCE_OPTION = /RESTRICT|CASCADE|SET NULL|NO ACTION/
 
-    def initialize(db_name, schema)
-      @db_name
+    def initialize(schema)
       @schema = schema
       @lines = schema.split("\n")
       @lines.delete_if { |line| line =~ /(\/\*|--|ENGINE)/ or line == ");" or line.strip.empty? }
       @lines.sort!
     end
-
-    # Public: Get the name of the database that defines this table.
-    #
-    # Returns a String.
-    attr_reader :db_name
 
     # Public: Get then name of the table.
     #
