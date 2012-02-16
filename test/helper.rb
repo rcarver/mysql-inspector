@@ -57,6 +57,15 @@ end
 class MysqlInspectorSpec < MiniTest::Spec
   include Schemas
 
+  def it msg
+    raise "A block must not be passed to the example-level +it+" if block_given?
+    @__current_msg = "it #{msg}"
+  end
+
+  def message msg = nil, ending = ".", &default
+    super(msg || @__current_msg, ending, &default)
+  end
+
   register_spec_type(self) { |desc| true }
 
   # Create a temporary directory. This directory will exist for the life of
