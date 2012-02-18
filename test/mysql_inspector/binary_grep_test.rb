@@ -40,7 +40,7 @@ describe "mysql-inspector grep" do
                  `last_name` varchar(255) NOT NULL
                  `name` varchar(255) NOT NULL DEFAULT 'toy'
           IDX    KEY `name` (`first_name`,`last_name`)
-          CST    CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
+          CST    CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`,`last_name`) REFERENCES `users` (`first_name`,`last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
 
           users
           COL    `first_name` varchar(255) NOT NULL
@@ -89,7 +89,7 @@ describe "mysql-inspector grep" do
           things
           COL    `first_name` varchar(255) NOT NULL
           IDX    KEY `name` (`first_name`,`last_name`)
-          CST    CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
+          CST    CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`,`last_name`) REFERENCES `users` (`first_name`,`last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
 
           users
           COL    `first_name` varchar(255) NOT NULL

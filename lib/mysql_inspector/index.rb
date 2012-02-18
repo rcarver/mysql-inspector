@@ -3,6 +3,15 @@ module MysqlInspector
 
     include MysqlInspector::TablePart
 
+    def to_sql
+      parts = []
+      parts << "UNIQUE" if unique
+      parts << "KEY"
+      parts << quote(name)
+      parts << paren(column_names.map { |c| quote(c) })
+      parts * " "
+    end
+
     def =~(matcher)
       name =~ matcher || column_names.any? { |c| c =~ matcher }
     end

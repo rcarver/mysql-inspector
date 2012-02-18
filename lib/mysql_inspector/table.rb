@@ -104,11 +104,11 @@ module MysqlInspector
 
       lines << "CREATE TABLE `#{table_name}`"
       lines << nil
-      columns.each { |x| lines << x.to_s }
+      columns.each { |x| lines << x.to_sql }
       lines << nil
-      indices.each { |x| lines << x.to_s }
+      indices.each { |x| lines << x.to_sql }
       lines << nil
-      constraints.each { |x| lines << x.to_s }
+      constraints.each { |x| lines << x.to_sql }
       lines << nil
       lines << options
 
@@ -119,7 +119,7 @@ module MysqlInspector
       lines = []
 
       lines << "CREATE TABLE `#{table_name}` ("
-      lines << (columns + indices + constraints).map { |x| "  #{x}" }.join(",\n")
+      lines << (columns + indices + constraints).map { |x| "  #{x.to_sql}" }.join(",\n")
       lines << ") #{options}"
 
       lines.join("\n")

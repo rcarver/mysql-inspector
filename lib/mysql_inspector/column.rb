@@ -3,9 +3,9 @@ module MysqlInspector
 
     include MysqlInspector::TablePart
 
-    def to_s
+    def to_sql
       parts = []
-      parts << "`#{name}`"
+      parts << quote(name)
       parts << sql_type
       parts << (nullable ? "NULL" : "NOT NULL")
       parts << "DEFAULT #{default}" if default

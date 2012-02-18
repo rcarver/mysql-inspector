@@ -8,8 +8,14 @@ module MysqlInspector
       name <=> other.name
     end
 
-    def to_s
-      sql_line.strip.chomp(',')
+  protected
+
+    def quote(word)
+      "`#{word}`"
+    end
+
+    def paren(words)
+      "(#{words * ","})"
     end
 
   end

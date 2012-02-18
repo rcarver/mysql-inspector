@@ -50,7 +50,7 @@ abort @opts.to_s if ARGV.empty?
 # Print table details
 def format_items(label, items, &formatter)
   pad = " " * 4
-  formatter ||= proc { |item | item }
+  formatter ||= proc { |item | item.to_sql }
   items.each.with_index { |item, i|
     if i == 0
       puts [label, pad, formatter.call(item)] * ""
@@ -123,10 +123,14 @@ when "diff"
     end
   end
 
+  def prefix_for_item(item, added, removed)
+    added.include?(item) ? "+" : "-"
+  end
+
   def format_diff_items(label, added, removed)
     format_items(label, (added + removed).sort) { |item|
-      prefix = added.include?(item) ? "+" : "-"
-      "#{prefix} #{item}"
+      prefix = prefix_for_item(item, added, removed)
+      "#{prefix} #{item.to_sql}"
     }
   end
 
