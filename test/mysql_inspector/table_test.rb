@@ -82,7 +82,7 @@ describe MysqlInspector::Table do
         KEY `name` (`first_name`,`last_name`),
         UNIQUE KEY `things_primary` (`id`),
         CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     EOL
   end
 end

@@ -118,7 +118,7 @@ module MysqlInspector
 
       lines << "CREATE TABLE `#{table_name}` ("
       lines << (columns + indices + constraints).map { |x| "  #{x}" }.join(",\n")
-      lines << ") #{options};"
+      lines << ") #{options}"
 
       lines.join("\n")
     end

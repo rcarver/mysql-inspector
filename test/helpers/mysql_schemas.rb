@@ -18,7 +18,7 @@ module MysqlSchemas
       CREATE TABLE `colors` (
         `name` varchar(255) NOT NULL,
         UNIQUE KEY `colors_primary` (`name`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     STR
   end
 
@@ -29,7 +29,7 @@ module MysqlSchemas
         `name` varchar(255) NOT NULL,
         `description` text NOT NULL,
         UNIQUE KEY `ideas_primary` (`id`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     STR
   end
 
@@ -41,7 +41,7 @@ module MysqlSchemas
         `last_name` varchar(255) NOT NULL,
         UNIQUE KEY `users_primary` (`id`),
         KEY `name` (`first_name`,`last_name`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     STR
   end
 
@@ -55,7 +55,7 @@ module MysqlSchemas
         UNIQUE KEY `things_primary` (`id`),
         KEY `color` (`color`),
         CONSTRAINT `belongs_to_color` FOREIGN KEY (`color`) REFERENCES `colors` (`name`) ON DELETE NO ACTION ON UPDATE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     STR
   end
 
@@ -70,7 +70,7 @@ module MysqlSchemas
         UNIQUE KEY `things_primary` (`id`),
         KEY `name` (`first_name`,`last_name`),
         CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     STR
   end
 
