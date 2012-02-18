@@ -71,7 +71,19 @@ describe MysqlInspector::Table do
     MysqlInspector::Table.new(subject.to_simple_schema).must_equal subject
   end
 
-  it "generates a real schema" do
+  it "formats a simplified schema well even if the table has nothing" do
+    schema = <<-EOL.unindented
+      CREATE TABLE `things` (
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+    EOL
+    MysqlInspector::Table.new(schema).to_simple_schema.must_equal <<-EOL.unindented.chomp
+      CREATE TABLE `things`
+
+      ENGINE=InnoDB DEFAULT CHARSET=utf8
+    EOL
+  end
+
+  it "generates a sql schema" do
     subject.to_sql.must_equal <<-EOL.unindented.chomp
       CREATE TABLE `things` (
         `first_name` varchar(255) NOT NULL,
