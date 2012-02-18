@@ -9,7 +9,6 @@ module MysqlInspector
       @schema = schema
       @lines = schema.split("\n")
       @lines.delete_if { |line| line =~ /(\/\*|--)/ or line.strip.empty? }
-      @lines.sort!
     end
 
     # Public: Get then name of the table.
@@ -34,7 +33,7 @@ module MysqlInspector
           default = line[/DEFAULT '([^']+)'/, 1]
           table_part line, MysqlInspector::Column.new(name, sql_type, nullable, default)
         end
-      }.compact
+      }.compact.sort
     end
 
     # Public: Get all of the indices defined in the table
@@ -48,7 +47,7 @@ module MysqlInspector
           column_names = backtick_names_in_csv($3)
           table_part line, MysqlInspector::Index.new(name, column_names, unique)
         end
-      }.compact
+      }.compact.sort
     end
 
     # Public: Get all of the constraints defined in the table
@@ -65,13 +64,22 @@ module MysqlInspector
           on_update = $6
           table_part line, MysqlInspector::Constraint.new(name, column_names, foreign_name, foreign_column_names, on_update, on_delete)
         end
-      }.compact
+      }.compact.sort
     end
 
     def options
       @options ||= begin
-        line = @lines.find { |line| line =~ /^\)(.*);$/}
-        $1.strip if line
+        if line = @lines.find { |line| line =~ /ENGINE=/}
+          # AUTO_INCREMENT is not useful.
+          line.sub!(/AUTO_INCREMENT=\d+/, '')
+          # Compact multiple spaces.
+          line.gsub!(/\s+/, ' ')
+          # Remove paren at the beginning.
+          line.sub!(/^\)\s*/, '')
+          # Remove semicolon at the end.
+          line.chomp!(';')
+          line
+        end
       end
     end
 
@@ -87,6 +95,34 @@ module MysqlInspector
 
     def <=>(other)
       table_name <=> other.table_name
+    end
+
+    def to_s
+      lines = []
+
+      lines << "CREATE TABLE `#{table_name}`"
+      lines << nil
+      columns.each { |x| lines << x.to_s }
+      lines << nil
+      indices.each { |x| lines << x.to_s }
+      lines << nil
+      constraints.each { |x| lines << x.to_s }
+      lines << nil
+      lines << options
+
+      lines.join("\n")
+    end
+
+    def to_sql
+      lines = []
+
+      lines << "CREATE TABLE `#{table_name}` ("
+      columns.each { |x| lines << x.to_s }
+      indices.each { |x| lines << x.to_s }
+      constraints.each { |x| lines << x.to_s }
+      lines << ") #{options};"
+
+      lines.join("\n")
     end
 
   protected
