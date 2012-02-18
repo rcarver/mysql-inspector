@@ -49,7 +49,7 @@ describe MysqlInspector::Table do
   end
 
   it "generates a simplified schema" do
-    subject.to_s.must_equal <<-EOL.unindented.chomp
+    subject.to_simple_schema.must_equal <<-EOL.unindented.chomp
       CREATE TABLE `things`
 
       `first_name` varchar(255) NOT NULL
@@ -68,7 +68,7 @@ describe MysqlInspector::Table do
   end
 
   it "may be instantiated with a simplified schema" do
-    MysqlInspector::Table.new(subject.to_s).must_equal subject
+    MysqlInspector::Table.new(subject.to_simple_schema).must_equal subject
   end
 
   it "generates a real schema" do

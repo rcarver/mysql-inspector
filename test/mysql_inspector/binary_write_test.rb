@@ -38,7 +38,7 @@ describe "mysql-inspector write" do
 
       it "creates a directory and files"
       File.directory?(dirname).must_equal true
-      Dir.glob(dirname + "/*.sql").size.must_equal 3
+      Dir.glob(dirname + "/*.table").size.must_equal 3
     end
   end
 

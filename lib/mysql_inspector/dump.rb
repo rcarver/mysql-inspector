@@ -70,7 +70,7 @@ module MysqlInspector
     #
     # Returns an Array of MysqlInspector::Table.
     def tables
-      Dir[File.join(dir, "*.sql")].map do |file|
+      Dir[File.join(dir, "*.table")].map do |file|
         schema = File.read(file)
         Table.new(schema)
       end
@@ -98,8 +98,8 @@ module MysqlInspector
 
       def write(dir)
         tables.each { |table|
-          File.open(File.join(dir, "#{table.table_name}.sql"), "w") { |f|
-            f.print table.to_s
+          File.open(File.join(dir, "#{table.table_name}.table"), "w") { |f|
+            f.print table.to_simple_schema
           }
         }
       end

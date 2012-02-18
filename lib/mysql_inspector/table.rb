@@ -99,17 +99,14 @@ module MysqlInspector
       table_name <=> other.table_name
     end
 
-    def to_s
+    def to_simple_schema
       lines = []
 
       lines << "CREATE TABLE `#{table_name}`"
       lines << nil
-      columns.each { |x| lines << x.to_sql }
-      lines << nil
-      indices.each { |x| lines << x.to_sql }
-      lines << nil
-      constraints.each { |x| lines << x.to_sql }
-      lines << nil
+      simple_schema_items(lines, columns)
+      simple_schema_items(lines, indices)
+      simple_schema_items(lines, constraints)
       lines << options
 
       lines.join("\n")
@@ -126,6 +123,11 @@ module MysqlInspector
     end
 
   protected
+
+    def simple_schema_items(lines, items)
+      lines.concat items.map { |item| item.to_sql }
+      lines << nil if items.any?
+    end
 
     def table_part(line, part)
       part.table = self

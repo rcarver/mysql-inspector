@@ -33,10 +33,10 @@ describe MysqlInspector::Dump do
       subject.tables.size.must_equal 3
     end
     it "writes simplified schemas to disk" do
-      file = File.join(tmpdir, "things.sql")
+      file = File.join(tmpdir, "things.table")
       File.exist?(file).must_equal true
       schema = File.read(file)
-      schema.must_equal MysqlInspector::Table.new(things_schema).to_s
+      schema.must_equal MysqlInspector::Table.new(things_schema).to_simple_schema
     end
   end
 
