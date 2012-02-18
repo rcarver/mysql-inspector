@@ -5,12 +5,12 @@ module MysqlSchemas
 
   # A sample starting database.
   def schema_a
-    ideas_schema + colors_schema + things_schema_1
+    [ideas_schema, colors_schema, things_schema_1].join(";\n")
   end
 
   # A sample changed database.
   def schema_b
-    users_schema + ideas_schema + things_schema_2
+    [users_schema, ideas_schema, things_schema_2].join(";\n")
   end
 
   def colors_schema

@@ -30,6 +30,6 @@ module MysqlUtils
 
   def syscall(command)
     out, err, status = Open3.capture3(command)
-    raise "FAILED:\n\nstdout:\n#{result.stdout}\n\nstderr:\n#{result.stderr}" unless status.exitstatus == 0
+    raise "FAILED:\n\nstdout:\n#{out}\n\nstderr:\n#{err}" unless status.exitstatus == 0
   end
 end
