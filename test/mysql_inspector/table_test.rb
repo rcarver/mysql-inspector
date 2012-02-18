@@ -48,7 +48,7 @@ describe MysqlInspector::Table do
     table.options.must_equal "ENGINE=InnoDB CHARSET=utf8"
   end
 
-  it "creates a simplified schema" do
+  it "generates a simplified schema" do
     subject.to_s.must_equal <<-EOL.unindented.chomp
       CREATE TABLE `things`
 
@@ -71,17 +71,17 @@ describe MysqlInspector::Table do
     MysqlInspector::Table.new(subject.to_s).must_equal subject
   end
 
-  it "creates a real schema" do
+  it "generates a real schema" do
     subject.to_sql.must_equal <<-EOL.unindented.chomp
       CREATE TABLE `things` (
-      `first_name` varchar(255) NOT NULL
-      `id` int(11) NOT NULL AUTO_INCREMENT
-      `last_name` varchar(255) NOT NULL
-      `name` varchar(255) NOT NULL DEFAULT 'toy'
-      `weight` int(11) DEFAULT NULL
-      KEY `name` (`first_name`,`last_name`)
-      UNIQUE KEY `things_primary` (`id`)
-      CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
+        `first_name` varchar(255) NOT NULL,
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `last_name` varchar(255) NOT NULL,
+        `name` varchar(255) NOT NULL DEFAULT 'toy',
+        `weight` int(11) DEFAULT NULL,
+        KEY `name` (`first_name`,`last_name`),
+        UNIQUE KEY `things_primary` (`id`),
+        CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     EOL
   end
