@@ -8,7 +8,7 @@ module MysqlInspector
     def initialize(schema)
       @schema = schema
       @lines = schema.split("\n")
-      @lines.delete_if { |line| line =~ /(\/\*|--|ENGINE)/ or line == ");" or line.strip.empty? }
+      @lines.delete_if { |line| line =~ /(\/\*|--)/ or line.strip.empty? }
       @lines.sort!
     end
 
@@ -68,11 +68,19 @@ module MysqlInspector
       }.compact
     end
 
+    def options
+      @options ||= begin
+        line = @lines.find { |line| line =~ /^\)(.*);$/}
+        $1.strip if line
+      end
+    end
+
     def eql?(other)
       table_name == other.table_name &&
           columns == other.columns &&
           indices == other.indices &&
-          constraints == other.constraints
+          constraints == other.constraints &&
+          options = other.options
     end
 
     alias == eql?

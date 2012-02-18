@@ -39,4 +39,7 @@ describe MysqlInspector::Table do
     subject.constraints[0].must_equal MysqlInspector::Constraint.new("belongs_to_user", ["first_name", "last_name"], "users", ["first_name", "last_name"], "CASCADE", "NO ACTION")
   end
 
+  it "describes the options" do
+    subject.options.must_equal "ENGINE=InnoDB DEFAULT CHARSET=utf8"
+  end
 end
