@@ -20,7 +20,7 @@ describe MysqlInspector::Dump do
 
   describe "when written" do
     before do
-      create_mysql_database(schema_a)
+      create_mysql_database(schema_b)
       subject.write!(database_name)
     end
     it "does exist" do
@@ -31,6 +31,12 @@ describe MysqlInspector::Dump do
     end
     it "has tables" do
       subject.tables.size.must_equal 3
+    end
+    it "writes simplified schemas to disk" do
+      file = File.join(tmpdir, "things.sql")
+      File.exist?(file).must_equal true
+      schema = File.read(file)
+      schema.must_equal MysqlInspector::Table.new(things_schema).to_s
     end
   end
 

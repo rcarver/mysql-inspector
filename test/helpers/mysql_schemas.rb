@@ -50,7 +50,7 @@ module MysqlSchemas
       CREATE TABLE `things` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `name` varchar(255) NOT NULL DEFAULT 'toy',
-        `weight` int(11) NULL,
+        `weight` int(11) DEFAULT NULL,
         `color` varchar(255) NOT NULL,
         UNIQUE KEY `things_primary` (`id`),
         KEY `color` (`color`),
@@ -64,7 +64,7 @@ module MysqlSchemas
       CREATE TABLE `things` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `name` varchar(255) NOT NULL DEFAULT 'toy',
-        `weight` int(11) NULL,
+        `weight` int(11) DEFAULT NULL,
         `first_name` varchar(255) NOT NULL,
         `last_name` varchar(255) NOT NULL,
         UNIQUE KEY `things_primary` (`id`),

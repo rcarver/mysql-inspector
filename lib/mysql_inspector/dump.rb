@@ -51,13 +51,13 @@ module MysqlInspector
     def write!(database_name)
       clean! if exists?
       FileUtils.mkdir_p(dir)
-      command = Runner.mysqldump("--no-data", "-T #{dir}", "--skip-opt", database_name)
       begin
-        command.run!
-      rescue Runner::CommandError => e
+        writer = CliSchema.new(database_name)
+        writer.write(dir)
+      rescue CliSchema::Error => e
         FileUtils.rm_rf(dir) # note this does not remove all the dirs that may have been created.
         case e.message
-        when /1049: Unknown database/
+        when /\s1049\s/
           raise WriteError, "The database #{database_name} does not exist"
         else
           raise WriteError, e.message
@@ -73,6 +73,41 @@ module MysqlInspector
       Dir[File.join(dir, "*.sql")].map do |file|
         schema = File.read(file)
         Table.new(schema)
+      end
+    end
+
+    class CliSchema
+
+      Error = Class.new(StandardError)
+
+      def initialize(database_name)
+        @database_name = database_name
+      end
+
+      def table_names
+        pipe_to_mysql("SHOW TABLES")
+      end
+
+      def tables
+        table_names.map { |table|
+          output = pipe_to_mysql("SHOW CREATE TABLE #{table}")
+          schema = output[0].split("\t").last.gsub(/\\n/, "\n")
+          MysqlInspector::Table.new(schema)
+        }
+      end
+
+      def write(dir)
+        tables.each { |table|
+          File.open(File.join(dir, "#{table.table_name}.sql"), "w") { |f|
+            f.print table.to_s
+          }
+        }
+      end
+
+      def pipe_to_mysql(query)
+        out, err, status = Open3.capture3("echo '#{query}' | mysql -uroot #{@database_name}")
+        raise Error, err unless status.exitstatus == 0
+        out.split("\n")[1..-1].map { |row| row.chomp }
       end
     end
 
