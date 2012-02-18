@@ -29,9 +29,11 @@ module MysqlInspector
         if line.strip =~ /^#{BACKTICK_WORD} ([\w\(\)\d]+)/
           name = $1
           sql_type = $2
-          nullable = line !~ /NOT NULL/
-          default = line[/DEFAULT '([^']+)'/, 1]
-          table_part line, MysqlInspector::Column.new(name, sql_type, nullable, default)
+          nullable = !!(line !~ /NOT NULL/)
+          default = line[/DEFAULT ('?[^']+'?)/, 1]
+          default = nil if default =~ /NULL/
+          auto_increment = !!(line =~ /AUTO_INCREMENT/)
+          table_part line, MysqlInspector::Column.new(name, sql_type, nullable, default, auto_increment)
         end
       }.compact.sort
     end

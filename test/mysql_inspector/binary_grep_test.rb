@@ -3,7 +3,7 @@ require 'helper'
 describe "mysql-inspector grep" do
 
   before do
-    create_mysql_database [users_schema, things_schema
+    create_mysql_database [users_schema, things_schema] * ";"
   end
 
   describe "in general" do

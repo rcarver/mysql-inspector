@@ -15,11 +15,11 @@ describe MysqlInspector::Table do
   end
 
   it "describes each column" do
-    subject.columns[0].must_equal MysqlInspector::Column.new("first_name", "varchar(255)", false, nil)
-    subject.columns[1].must_equal MysqlInspector::Column.new("id", "int(11)", false, nil)
-    subject.columns[2].must_equal MysqlInspector::Column.new("last_name", "varchar(255)", false, nil)
-    subject.columns[3].must_equal MysqlInspector::Column.new("name", "varchar(255)", false, "toy")
-    subject.columns[4].must_equal MysqlInspector::Column.new("weight", "int(11)", true, nil)
+    subject.columns[0].must_equal MysqlInspector::Column.new("first_name", "varchar(255)", false, nil, false)
+    subject.columns[1].must_equal MysqlInspector::Column.new("id", "int(11)", false, nil, true)
+    subject.columns[2].must_equal MysqlInspector::Column.new("last_name", "varchar(255)", false, nil, false)
+    subject.columns[3].must_equal MysqlInspector::Column.new("name", "varchar(255)", false, "'toy'", false)
+    subject.columns[4].must_equal MysqlInspector::Column.new("weight", "int(11)", true, nil, false)
   end
 
   it "extracts all of the indices" do
@@ -56,7 +56,7 @@ describe MysqlInspector::Table do
       `id` int(11) NOT NULL AUTO_INCREMENT
       `last_name` varchar(255) NOT NULL
       `name` varchar(255) NOT NULL DEFAULT 'toy'
-      `weight` int(11) DEFAULT NULL
+      `weight` int(11) NULL
 
       KEY `name` (`first_name`,`last_name`)
       UNIQUE KEY `things_primary` (`id`)
@@ -78,7 +78,7 @@ describe MysqlInspector::Table do
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `last_name` varchar(255) NOT NULL,
         `name` varchar(255) NOT NULL DEFAULT 'toy',
-        `weight` int(11) DEFAULT NULL,
+        `weight` int(11) NULL,
         KEY `name` (`first_name`,`last_name`),
         UNIQUE KEY `things_primary` (`id`),
         CONSTRAINT `belongs_to_user` FOREIGN KEY (`first_name`, `last_name`) REFERENCES `users` (`first_name`, `last_name`) ON DELETE NO ACTION ON UPDATE CASCADE
