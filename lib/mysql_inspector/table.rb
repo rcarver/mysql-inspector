@@ -131,7 +131,6 @@ module MysqlInspector
 
     def table_part(line, part)
       part.table = self
-      part.sql_line = line
       part
     end
 

@@ -2,7 +2,6 @@ module MysqlInspector
   module TablePart
 
     attr_accessor :table
-    attr_accessor :sql_line
 
     def <=>(other)
       name <=> other.name
