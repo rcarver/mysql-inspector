@@ -41,6 +41,13 @@ module MysqlInspector
       File.exist?(@info_file)
     end
 
+    # Public: Get the tables written by the dump.
+    #
+    # Returns an Array of MysqlInspector::Table.
+    def tables
+      Dir[File.join(dir, "*.table")].map { |file| Table.new(File.read(file)) }
+    end
+
     # Public: Write to the dump directory. Any existing dump will be deleted.
     #
     # access - Instance of Access.
@@ -72,13 +79,6 @@ module MysqlInspector
       schema = tables.map { |t| t.to_sql }.join(";")
       access.drop_all_tables
       access.load(schema)
-    end
-
-    # Public: Get the tables written by the dump.
-    #
-    # Returns an Array of MysqlInspector::Table.
-    def tables
-      Dir[File.join(dir, "*.table")].map { |file| Table.new(File.read(file)) }
     end
 
   end
