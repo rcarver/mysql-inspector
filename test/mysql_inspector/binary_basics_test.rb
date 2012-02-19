@@ -28,6 +28,7 @@ describe "mysql-inspector -h" do
       Commands
 
         write DATABASE [VERSION]
+        load DATABASE [VERSION]
         diff
         diff TO
         diff FROM TO

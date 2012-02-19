@@ -36,6 +36,7 @@ end
   opts.separator ""
 
   opts.separator "  write DATABASE [VERSION]"
+  opts.separator "  load DATABASE [VERSION]"
   opts.separator "  diff"
   opts.separator "  diff TO"
   opts.separator "  diff FROM TO"
