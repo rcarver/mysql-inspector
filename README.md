@@ -2,7 +2,7 @@
 
 mysql-inspector is a command line tool that helps you understand your
 MySQL database schema. It works by writing a special type of dump file
-to disk and then parsing it for various purposes. For example:
+to disk and then parsing it for various purposes.
 
 ## Usage
 
@@ -49,7 +49,6 @@ each and then let mysql-inspector show you the tables and attributes
 that differ.
 
 By default, a diff is performed on dumps named `current` and `target`.
-For example:
 
     mysql-inspector write dev_database current
     mysql-inspector write prod_database target
@@ -60,7 +59,7 @@ For example:
 Restore a version of your database schema. By default, the `current`
 schema is used.
 
-    mysql-inspector load
+    mysql-inspector load my_database
 
 ## Rails and ActiveRecord Migrations
 
