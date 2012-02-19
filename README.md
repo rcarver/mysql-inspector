@@ -1,50 +1,83 @@
-# mysql-inspector is a simple tool for diffing and searching mysql dumps.
+# mysql-inspector
 
-## Why do I need that?
+mysql-inspector is a command line tool that helps you understand your
+MySQL database schema. It works by writing a special type of dump file
+to disk and then parsing it for various purposes. For example:
 
-It helps you migrate your schema from one version to another.
+## Usage
 
-## Ok, how?
+mysql-inspector supports several useful commands, but the first thing
+you'll want to do is write at least one copy of your database to disk.
 
-Say you have a project called zippers. Your development database is called
-zippers_development. You're working on a branch called smoother, based on
-master, which adds a new column metal_grade.
+### write
 
-Start by storing the new state of your database.
+The first thing to do is write a copy of your database to disk for
+mysql-inspector to operate on. You can name this copy whatever you want,
+by default it's called `current`.
 
-% mysql-inspector --target --write zippers_development
+    mysql-inspector write my_database
 
-This command says "store the state of the zippers_development database as my
-target version".
+The result of this command will be a directory full of `.table` files,
+one for each table in your database. A `.table` file is a simplified and
+consistent representation of a table. Most importantly, it will not
+change arbitrarly like a `mysqldump` file if the order of columns
+changes or an `AUTO_INCREMENT` value is defined on the table.
+mysql-inspector is purely concerned with the relational structure of the
+table and favors this over an exact representation of the current
+database schema. In practice, this means that you can commit this
+directory to source control and easily view diffs over time without
+excess line noise.
 
-Now, go back to your master branch and load its database into
-zippers_development, then dump the contents.
+### grep
 
-% mysql-inspector --current --write zippers_development
+Search your entire database for columns, indices and constraints that
+match a string or regex. For example, find everything that includes
+'user_id' to see which tables relate to a user.
 
-Now, in order to write database migrations for master to smoother let's see
-what changes occurred.
+    mysql-inspector grep user_id
+    mysql-inspector grep '^name'
 
-% mysql-inspector --diff
+Multiple matchers may be specified, which are AND'd together.
 
-[[ show sample output ]]
+    mysql-inspector grep first name
 
-Here we see that our target version contains one column that the current
-version does not. It's easy to write an alter statement, in fact most of the
-information is right here.
+### diff
 
-mysql% alter table zippers add column metal_grade int(11) NOT NULL DEFAULT '0';
+Compare two schemas against each other. Perhaps your local development
+and production databases have gone out of sync. First write a copy of
+each and then let mysql-inspector show you the tables and attributes
+that differ.
 
-Now we can compare the two again. This time we need to add the --force
-argument to say that it's ok to overwrite the previous dump. We'll also go
-ahead and run the diff.
+By default, a diff is performed on dumps named `current` and `target`.
+For example:
 
-% mysql-inspector --current --write zippers_development --force --diff
+    mysql-inspector write dev_database current
+    mysql-inspector write prod_database target
+    mysql-inspector diff
 
-No differences!
+### load
 
-That was pretty simple. Is there more?
+Restore a version of your database schema. By default, the `current`
+schema is used.
 
-Sure.
+    mysql-inspector load
 
-License: MIT
+## Rails and ActiveRecord Migrations
+
+mysql-inspector can help you manage your database schema in a Rails
+project. It replaces rake tasks such as `db:structure:dump` and writes
+its own version at `db/current` instead of `db/structure.sql`. You'll
+find this format much more convenient for checking into version control.
+
+When a `schema_migrations` table is found, mysql-inspector writes its
+contents to a file called `schema_migrations` within the dump directory.
+When a dump is loaded via `mysql-inspector load` or `rake
+db:structure:load`, the migrations will be restored.
+
+## Author
+
+Ryan Carver (@rcarver / ryan@ryancarver.com)
+
+## License
+
+Copyright © 2012 Ryan Carver. Licensed under Ruby/MIT, see LICENSE.
