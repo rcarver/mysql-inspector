@@ -1,160 +1,17 @@
 #!/usr/bin/env ruby
 
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
-require 'optparse'
+
 require "mysql_inspector"
+require "mysql_inspector/cli"
 
-CURRENT = "current"
-TARGET  = "target"
+config = MysqlInspector::Config.new
+cli = MysqlInspector::CLI.new(config, $stdout, $stderr)
 
-def usage(msg)
-  abort "Usage: #{@opts.program_name} #{msg}"
-end
-
-@opts = OptionParser.new do |opts|
-  opts.banner = "Usage: #{opts.program_name} [options] command [command args]"
-
-  opts.separator ""
-  opts.separator "Options"
-  opts.separator ""
-
-  opts.on("--out DIR", "Where to store schemas. Defaults to '.'") do |dir|
-    MysqlInspector.config.dir = dir
-  end
-
-  opts.on("-h", "--help", "What you're looking at") do
-    opts.terminate
-  end
-
-  opts.on("-v", "--version", "Show the version of mysql-inspector") do
-    puts MysqlInspector::VERSION
-    exit
-  end
-
-  opts.separator ""
-  opts.separator "Commands"
-  opts.separator ""
-
-  opts.separator "  write DATABASE [VERSION]"
-  opts.separator "  load DATABASE [VERSION]"
-  opts.separator "  diff"
-  opts.separator "  diff TO"
-  opts.separator "  diff FROM TO"
-  opts.separator "  grep PATTERN [PATTERN]"
-  opts.separator ""
-end
-
-@opts.parse!
-
-abort @opts.to_s if ARGV.empty?
-
-# Print table details
-def format_items(label, items, &formatter)
-  pad = " " * 4
-  formatter ||= proc { |item | item.to_sql }
-  items.each.with_index { |item, i|
-    if i == 0
-      puts [label, pad, formatter.call(item)] * ""
-    else
-      puts [" " * label.size, pad, formatter.call(item)] * ""
-    end
-  }
-end
-
-command = ARGV.shift
-case command
-
-when "write"
-  database = ARGV.shift or usage "write DATABASE [VERSION]"
-  version  = ARGV.shift || CURRENT
-
-  begin
-    MysqlInspector.config.write_dump(version, database)
-  rescue MysqlInspector::Access::Error => e
-    abort e.message
-  end
-
-when "load"
-  database = ARGV.shift or usage "load DATABASE [VERSION]"
-  version  = ARGV.shift || CURRENT
-
-  dump = MysqlInspector.config.create_dump(version)
-  dump.exists? or abort "Cannot load because no #{version.inspect} dump exists"
-
-  begin
-    MysqlInspector.config.load_dump(version, database)
-  rescue MysqlInspector::Access::Error => e
-    abort e.message
-  end
-
-when "grep"
-  dump = MysqlInspector.config.create_dump(CURRENT)
-  dump.exists? or abort "Cannot grep because dump #{CURRENT.inspect} does not exist"
-
-  matchers = *ARGV.map { |a| Regexp.new(a) }
-  grep = MysqlInspector::Grep.new(dump, matchers)
-  grep.execute
-
-  puts "#{dump.db_name}@#{CURRENT}"
-  puts
-  puts "grep #{matchers.map { |m| m.inspect } * " AND "}"
-
-  puts if grep.any_matches?
-
-  grep.each_table { |table, subset|
-    puts table.table_name
-    format_items("COL", subset.columns)
-    format_items("IDX", subset.indices)
-    format_items("CST", subset.constraints)
-    puts
-  }
-
-when "diff"
-  dump1 = MysqlInspector.config.create_dump(CURRENT)
-  dump1.exists? or abort "Cannot diff because no #{CURRENT.inspect} dump exists"
-  dump2 = MysqlInspector.config.create_dump(TARGET)
-  dump2.exists? or abort "Cannot diff because no #{TARGET.inspect} dump exists"
-
-  diff = MysqlInspector::Diff.new(dump1, dump2)
-  diff.execute
-
-  puts "diff #{dump1.db_name}@#{CURRENT} #{dump2.db_name}@#{TARGET}"
-
-  def prefix_for_table(table, diff)
-    case
-    when diff.added_tables.include?(table) then "+"
-    when diff.missing_tables.include?(table) then "-"
-    else "="
-    end
-  end
-
-  def prefix_for_item(item, added, removed)
-    added.include?(item) ? "+" : "-"
-  end
-
-  def format_diff_items(label, added, removed)
-    format_items(label, (added + removed).sort) { |item|
-      prefix = prefix_for_item(item, added, removed)
-      "#{prefix} #{item.to_sql}"
-    }
-  end
-
-  tables = diff.added_tables + diff.missing_tables + diff.different_tables
-
-  if tables.any?
-    puts
-    tables.sort.each do |t|
-      prefix = prefix_for_table(t, diff)
-      puts "#{prefix} #{t.table_name}"
-      if t.is_a?(MysqlInspector::Diff::TableDiff)
-        format_diff_items("  COL", t.added_columns, t.missing_columns)
-        format_diff_items("  IDX", t.added_indices, t.missing_indices)
-        format_diff_items("  CST", t.added_constraints, t.missing_constraints)
-      end
-    end
-    puts
-  end
-
-else
-  abort "Unknown command #{command.inspect}"
+begin
+  cli.run(ARGV)
+rescue MysqlInspector::CLI::Exit
+  exit 0
+rescue MysqlInspector::CLI::Abort
+  exit 1
 end

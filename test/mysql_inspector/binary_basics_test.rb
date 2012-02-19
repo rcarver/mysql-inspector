@@ -16,7 +16,8 @@ describe "mysql-inspector -h" do
   subject { mysql_inspector "-h" }
 
   it "shows the help" do
-    stderr.must_equal <<-EOL.unindented
+    stderr.must_equal ""
+    stdout.must_equal <<-EOL.unindented
       Usage: mysql-inspector [options] command [command args]
 
       Options
@@ -35,8 +36,7 @@ describe "mysql-inspector -h" do
         grep PATTERN [PATTERN]
 
     EOL
-    stdout.must_equal ""
-    status.must_equal 1
+    status.must_equal 0
   end
 end
 

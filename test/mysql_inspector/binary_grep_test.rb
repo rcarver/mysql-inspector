@@ -12,7 +12,7 @@ describe "mysql-inspector grep" do
 
     describe "when no dump exists" do
       it "tells you" do
-        stderr.must_equal %(Cannot grep because dump "current" does not exist)
+        stderr.must_equal %(Dump "current" does not exist)
         stdout.must_equal ""
         status.must_equal 1
       end

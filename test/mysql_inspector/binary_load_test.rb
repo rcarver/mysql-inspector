@@ -17,7 +17,7 @@ describe "mysql-inspector load" do
     describe "when the dump does not exist" do
       it "fails" do
         stdout.must_equal ""
-        stderr.must_equal "Cannot load because no \"current\" dump exists"
+        stderr.must_equal "Dump \"current\" does not exist"
         status.must_equal 1
       end
     end

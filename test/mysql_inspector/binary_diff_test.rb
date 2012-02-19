@@ -12,7 +12,7 @@ describe "mysql-inspector diff" do
 
     describe "when no current dump exists" do
       it "tells you" do
-        stderr.must_equal %(Cannot diff because no "current" dump exists)
+        stderr.must_equal %(Dump "current" does not exist)
         stdout.must_equal ""
         status.must_equal 1
       end
@@ -21,7 +21,7 @@ describe "mysql-inspector diff" do
     describe "when no target dump exists" do
       it "tells you" do
         inspect_database "write #{database_name}"
-        stderr.must_equal %(Cannot diff because no "target" dump exists)
+        stderr.must_equal %(Dump "target" does not exist)
         stdout.must_equal ""
         status.must_equal 1
       end
