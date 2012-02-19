@@ -68,7 +68,7 @@ when "write"
   version  = ARGV.shift || CURRENT
   begin
     MysqlInspector.config.write_dump(version, database)
-  rescue MysqlInspector::Dump::WriteError => e
+  rescue MysqlInspector::Access::Error => e
     abort e.message
   end
 

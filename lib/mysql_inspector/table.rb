@@ -122,12 +122,6 @@ module MysqlInspector
       lines.join("\n")
     end
 
-    def write(dir)
-      File.open(File.join(dir, "#{table_name}.table"), "w") { |f|
-        f.print to_simple_schema
-      }
-    end
-
   protected
 
     def simple_schema_items(lines, items)

@@ -1,8 +1,6 @@
 module MysqlInspector
   class Dump
 
-    WriteError = Class.new(StandardError)
-
     def initialize(dir)
       @dir = dir
       @info_file = File.join(dir, ".info")
@@ -45,67 +43,42 @@ module MysqlInspector
 
     # Public: Write to the dump directory. Any existing dump will be deleted.
     #
-    # database_name - String name of the database to store.
+    # access - Instance of Access.
     #
     # Returns nothing.
-    def write!(database_name)
+    def write!(access)
       clean! if exists?
       FileUtils.mkdir_p(dir)
       begin
-        writer = CliSchemaWriter.new(database_name)
-        writer.write(dir)
-      rescue CliSchemaWriter::Error => e
+        access.tables.each { |table|
+          File.open(File.join(dir, "#{table.table_name}.table"), "w") { |f|
+            f.print table.to_simple_schema
+          }
+        }
+        File.open(@info_file, "w") { |f| f.print(Time.now.utc.to_s) }
+      rescue
         FileUtils.rm_rf(dir) # note this does not remove all the dirs that may have been created.
-        case e.message
-        when /\s1049\s/
-          raise WriteError, "The database #{database_name} does not exist"
-        else
-          raise WriteError, e.message
-        end
+        raise
       end
-      File.open(@info_file, "w") { |f| f.print(Time.now.utc.to_s) }
+    end
+
+    # Public: Load this dump into a database. All existing tables will
+    # be deleted from the database and replaced by those from this dump.
+    #
+    # access - Instance of Access.
+    #
+    # Returns nothing.
+    def load!(access)
+      schema = tables.map { |t| t.to_sql }.join(";")
+      access.drop_all_tables
+      access.load(schema)
     end
 
     # Public: Get the tables written by the dump.
     #
     # Returns an Array of MysqlInspector::Table.
     def tables
-      Dir[File.join(dir, "*.table")].map do |file|
-        schema = File.read(file)
-        Table.new(schema)
-      end
-    end
-
-    class CliSchemaWriter
-
-      Error = Class.new(StandardError)
-
-      def initialize(database_name)
-        @database_name = database_name
-      end
-
-      def table_names
-        pipe_to_mysql("SHOW TABLES")
-      end
-
-      def tables
-        table_names.map { |table|
-          output = pipe_to_mysql("SHOW CREATE TABLE #{table}")
-          schema = output[0].split("\t").last.gsub(/\\n/, "\n")
-          MysqlInspector::Table.new(schema)
-        }
-      end
-
-      def write(dir)
-        tables.each { |table| table.write(dir) }
-      end
-
-      def pipe_to_mysql(query)
-        mysql_command = MysqlInspector.config.mysql_command
-        out, err, status = Open3.capture3("echo '#{query}' | #{mysql_command} #{@database_name}")
-        raise Error, err unless status.exitstatus == 0
-        out.split("\n")[1..-1].map { |row| row.chomp }
-      end
+      Dir[File.join(dir, "*.table")].map { |file| Table.new(File.read(file)) }
     end
 
   end

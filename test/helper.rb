@@ -51,6 +51,13 @@ class MysqlInspectorSpec < MiniTest::Spec
     MysqlUtils.create_mysql_database(database_name, schema)
   end
 
+  # Get access to the mysql database via the CLI interface.
+  #
+  # Returns a MysqlInspector:Access::CLI.
+  def cli_access
+    MysqlInspector::Access::CLI.new(database_name)
+  end
+
   before do
     @tmpdirs = {}
     @mysql_database = nil

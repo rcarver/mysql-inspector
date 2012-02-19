@@ -21,7 +21,7 @@ describe MysqlInspector::Dump do
   describe "when written" do
     before do
       create_mysql_database(schema_b)
-      subject.write!(database_name)
+      subject.write!(cli_access)
     end
     it "does exist" do
       subject.must_be :exists?
@@ -32,14 +32,30 @@ describe MysqlInspector::Dump do
     it "has tables" do
       subject.tables.size.must_equal 3
     end
-    it "writes schemas to disk" do
-      File.exist?(File.join(tmpdir, "things.table")).must_equal true
+    it "writes simple schemas to disk" do
+      file = File.join(tmpdir, "things.table")
+      File.exist?(file).must_equal true
+      schema = File.read(file)
+      schema.must_equal MysqlInspector::Table.new(things_schema).to_simple_schema
+    end
+  end
+
+  describe "when loaded" do
+    before do
+      create_mysql_database(schema_b)
+      subject.write!(cli_access)
+      create_mysql_database(ideas_schema)
+    end
+    it "recreates all of the tables, even ones that already exist" do
+      cli_access.table_names.must_equal ["ideas"]
+      subject.load!(cli_access)
+      cli_access.table_names.sort.must_equal ["ideas", "things", "users"]
     end
   end
 
   describe "when written but a database does not exist" do
     it "fails" do
-      proc { subject.write!(database_name) }.must_raise MysqlInspector::Dump::WriteError
+      proc { subject.write!(cli_access) }.must_raise MysqlInspector::Access::Error
     end
   end
 end

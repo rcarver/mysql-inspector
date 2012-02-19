@@ -41,16 +41,20 @@ module MysqlInspector
       @dir ||= File.expand_path(Dir.pwd)
     end
 
+    def access(database_name)
+      MysqlInspector::Access::CLI.new(database_name)
+    end
+
     def create_dump(version)
       Dump.new(File.join(dir, version))
     end
 
     def write_dump(version, database_name)
-      create_dump(version).write!(database_name)
+      create_dump(version).write!(access(database_name))
     end
 
     def load_dump(version, database_name)
-      create_dump(version).load!(database_name)
+      create_dump(version).load!(access(database_name))
     end
 
   end
