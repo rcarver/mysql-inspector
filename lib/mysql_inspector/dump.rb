@@ -52,9 +52,9 @@ module MysqlInspector
       clean! if exists?
       FileUtils.mkdir_p(dir)
       begin
-        writer = CliSchema.new(database_name)
+        writer = CliSchemaWriter.new(database_name)
         writer.write(dir)
-      rescue CliSchema::Error => e
+      rescue CliSchemaWriter::Error => e
         FileUtils.rm_rf(dir) # note this does not remove all the dirs that may have been created.
         case e.message
         when /\s1049\s/
@@ -76,7 +76,7 @@ module MysqlInspector
       end
     end
 
-    class CliSchema
+    class CliSchemaWriter
 
       Error = Class.new(StandardError)
 
@@ -101,7 +101,8 @@ module MysqlInspector
       end
 
       def pipe_to_mysql(query)
-        out, err, status = Open3.capture3("echo '#{query}' | mysql -uroot #{@database_name}")
+        mysql_command = MysqlInspector.config.mysql_command
+        out, err, status = Open3.capture3("echo '#{query}' | #{mysql_command} #{@database_name}")
         raise Error, err unless status.exitstatus == 0
         out.split("\n")[1..-1].map { |row| row.chomp }
       end
