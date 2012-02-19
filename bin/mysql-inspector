@@ -7,19 +7,19 @@ require "mysql_inspector"
 CURRENT = "current"
 TARGET  = "target"
 
-@options = {
-  :dir => "."
-}
+def usage(msg)
+  abort "Usage: #{@opts.program_name} #{msg}"
+end
 
 @opts = OptionParser.new do |opts|
-  opts.banner = "Usage: #{File.basename $0} [options] command [command args]"
+  opts.banner = "Usage: #{opts.program_name} [options] command [command args]"
 
   opts.separator ""
   opts.separator "Options"
   opts.separator ""
 
   opts.on("--out DIR", "Where to store schemas. Defaults to '.'") do |dir|
-    @options[:dir] = dir
+    MysqlInspector.config.dir = dir
   end
 
   opts.on("-h", "--help", "What you're looking at") do
@@ -60,30 +60,20 @@ def format_items(label, items, &formatter)
   }
 end
 
-def usage(msg)
-  abort "Usage: #{@opts.program_name} #{msg}"
-end
-
-def create_dump(name)
-  path = File.join(@options[:dir], name)
-  MysqlInspector::Dump.new(path)
-end
-
 command = ARGV.shift
 case command
 
 when "write"
   database = ARGV.shift or usage "write DATABASE [VERSION]"
   version  = ARGV.shift || CURRENT
-  dump = create_dump(version)
   begin
-    dump.write!(database)
+    MysqlInspector.config.write_dump(version, database)
   rescue MysqlInspector::Dump::WriteError => e
     abort e.message
   end
 
 when "grep"
-  dump = create_dump(CURRENT)
+  dump = MysqlInspector.config.create_dump(CURRENT)
   dump.exists? or abort "Cannot grep because dump #{CURRENT.inspect} does not exist"
 
   matchers = *ARGV.map { |a| Regexp.new(a) }
@@ -105,9 +95,9 @@ when "grep"
   }
 
 when "diff"
-  dump1 = create_dump(CURRENT)
+  dump1 = MysqlInspector.config.create_dump(CURRENT)
   dump1.exists? or abort "Cannot diff because no #{CURRENT.inspect} dump exists"
-  dump2 = create_dump(TARGET)
+  dump2 = MysqlInspector.config.create_dump(TARGET)
   dump2.exists? or abort "Cannot diff because no #{TARGET.inspect} dump exists"
 
   diff = MysqlInspector::Diff.new(dump1, dump2)
