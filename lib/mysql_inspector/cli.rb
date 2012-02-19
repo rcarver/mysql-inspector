@@ -1,10 +1,10 @@
 require 'optparse'
+require 'stringio'
 
 module MysqlInspector
   class CLI
 
-    Exit  = Class.new(RuntimeError)
-    Abort = Class.new(RuntimeError)
+    NAME = "mysql-inspector"
 
     CURRENT = "current"
     TARGET  = "target"
@@ -13,19 +13,23 @@ module MysqlInspector
       @config = config
       @stdout = stdout || StringIO.new
       @stderr = stderr || StringIO.new
+      @status = 0
     end
 
     attr_reader :stdout
     attr_reader :stderr
+    attr_reader :status
 
     def exit(msg)
       @stdout.puts msg
-      raise Exit
+      @status = 0
+      throw :quit
     end
 
     def abort(msg)
       @stderr.puts msg
-      raise Abort
+      @status = 1
+      throw :quit
     end
 
     def puts(*args)
@@ -33,12 +37,12 @@ module MysqlInspector
     end
 
     def usage(msg)
-      abort "Usage: #{option_parser.program_name} #{msg}"
+      abort "Usage: #{NAME} #{msg}"
     end
 
     def option_parser
       @option_parser ||= OptionParser.new do |opts|
-        opts.banner = "Usage: #{opts.program_name} [options] command [command args]"
+        opts.banner = "Usage: #{NAME} [options] command [command args]"
 
         opts.separator ""
         opts.separator "Options"

@@ -11,6 +11,7 @@ require "mysql_inspector/constraint"
 require "mysql_inspector/index"
 
 require "mysql_inspector/access"
+require "mysql_inspector/cli"
 require "mysql_inspector/config"
 require "mysql_inspector/diff"
 require "mysql_inspector/dump"

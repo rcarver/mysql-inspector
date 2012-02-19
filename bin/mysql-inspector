@@ -3,15 +3,12 @@
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 
 require "mysql_inspector"
-require "mysql_inspector/cli"
 
 config = MysqlInspector::Config.new
 cli = MysqlInspector::CLI.new(config, $stdout, $stderr)
 
-begin
+catch(:quit) {
   cli.run(ARGV)
-rescue MysqlInspector::CLI::Exit
-  exit 0
-rescue MysqlInspector::CLI::Abort
-  exit 1
-end
+}
+
+exit cli.status

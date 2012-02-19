@@ -2,6 +2,7 @@ require 'minitest/autorun'
 require 'minitest/mock'
 require 'open3'
 require 'ostruct'
+require 'stringio'
 
 require 'mysql_inspector'
 
@@ -76,25 +77,30 @@ class MysqlInspectorSpec < MiniTest::Spec
   end
 end
 
-class MysqlInspectorBinarySpec < MysqlInspectorSpec
+class MysqlInspectorCliSpec < MysqlInspectorSpec
 
   register_spec_type(self) { |desc| desc =~ /mysql-inspector/ }
 
+  let(:config) { MysqlInspector::Config.new }
+
   def mysql_inspector(args)
-    stdout, stderr, status = Open3.capture3("mysql-inspector #{args}")
-    OpenStruct.new(:stdout => stdout, :stderr => stderr, :status => status.exitstatus)
+    cli = MysqlInspector::CLI.new(config, StringIO.new, StringIO.new)
+    argv = args.split(/\s+/).map { |x| x.gsub(/'/, '') }
+    catch(:quit) { cli.run(argv) }
+    cli
   end
 
   def inspect_database(args)
-    mysql_inspector "--out #{tmpdir} #{args}"
+    config.dir = tmpdir
+    mysql_inspector args
   end
 
   def stdout
-    subject.stdout.chomp
+    subject.stdout.string.chomp
   end
 
   def stderr
-    subject.stderr.chomp
+    subject.stderr.string.chomp
   end
 
   def status
