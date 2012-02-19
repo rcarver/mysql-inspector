@@ -97,11 +97,7 @@ module MysqlInspector
       end
 
       def write(dir)
-        tables.each { |table|
-          File.open(File.join(dir, "#{table.table_name}.table"), "w") { |f|
-            f.print table.to_simple_schema
-          }
-        }
+        tables.each { |table| table.write(dir) }
       end
 
       def pipe_to_mysql(query)

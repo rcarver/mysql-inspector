@@ -97,4 +97,12 @@ describe MysqlInspector::Table do
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     EOL
   end
+
+  it "writes simplified schema" do
+    subject.write(tmpdir)
+    file = File.join(tmpdir, "things.table")
+    File.exist?(file).must_equal true
+    schema = File.read(file)
+    schema.must_equal MysqlInspector::Table.new(things_schema).to_simple_schema
+  end
 end
