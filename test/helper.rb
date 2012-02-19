@@ -51,6 +51,13 @@ class MysqlInspectorSpec < MiniTest::Spec
     MysqlUtils.create_mysql_database(database_name, schema)
   end
 
+  # Drop the test mysql database.
+  #
+  # Returns nothing.
+  def drop_mysql_database
+    MysqlUtils.drop_mysql_database(database_name)
+  end
+
   # Get access to the mysql database via the CLI interface.
   #
   # Returns a MysqlInspector:Access::CLI.
@@ -65,7 +72,7 @@ class MysqlInspectorSpec < MiniTest::Spec
 
   after do
     @tmpdirs.values.each { |dir| FileUtils.rm_rf dir }
-    MysqlUtils.drop_mysql_database(database_name) if @mysql_database
+    drop_mysql_database if @mysql_database
   end
 end
 

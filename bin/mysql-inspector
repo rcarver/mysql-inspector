@@ -66,8 +66,22 @@ case command
 when "write"
   database = ARGV.shift or usage "write DATABASE [VERSION]"
   version  = ARGV.shift || CURRENT
+
   begin
     MysqlInspector.config.write_dump(version, database)
+  rescue MysqlInspector::Access::Error => e
+    abort e.message
+  end
+
+when "load"
+  database = ARGV.shift or usage "load DATABASE [VERSION]"
+  version  = ARGV.shift || CURRENT
+
+  dump = MysqlInspector.config.create_dump(version)
+  dump.exists? or abort "Cannot load because no #{version.inspect} dump exists"
+
+  begin
+    MysqlInspector.config.load_dump(version, database)
   rescue MysqlInspector::Access::Error => e
     abort e.message
   end
