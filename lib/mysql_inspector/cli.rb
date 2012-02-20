@@ -103,13 +103,13 @@ module MysqlInspector
       command_name = argv.shift or abort option_parser.to_s
       command_class = command_name.capitalize + "Command"
 
-      if defined?(command_class)
+      begin
         klass = self.class.const_get(command_class)
         command = klass.new(@config, @stdout, @stderr)
         command.parse!(argv)
         command
-      else
-        abort option_parser.to_s
+      rescue NameError
+        abort "Unknown command #{command_name.inspect}"
       end
     end
 

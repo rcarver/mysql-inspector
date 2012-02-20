@@ -40,3 +40,14 @@ describe "mysql-inspector -h" do
   end
 end
 
+describe "mysql-inspector unknown_command" do
+
+  subject { mysql_inspector "unknown_command" }
+
+  it "fails" do
+    stderr.must_equal "Unknown command \"unknown_command\""
+    stdout.must_equal ""
+    status.must_equal 1
+  end
+end
+
