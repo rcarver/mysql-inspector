@@ -25,13 +25,13 @@ describe "mysql-inspector load" do
 
   describe "running" do
     subject { inspect_database "load #{database_name}" }
-    before do
+    specify do
       create_mysql_database schema_b
       inspect_database "write #{database_name}"
       create_mysql_database ideas_schema
       cli_access.table_names.size.must_equal 1
-    end
-    it "succeeds" do
+
+      it "outputs nothing"
       stdout.must_equal ""
       stderr.must_equal ""
       status.must_equal 0
