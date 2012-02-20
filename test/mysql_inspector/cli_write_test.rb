@@ -5,6 +5,7 @@ describe "mysql-inspector write" do
   describe "when you don't specify a database" do
 
     subject { inspect_database "write" }
+
     it "fails" do
       stdout.must_equal ""
       stderr.must_equal "Usage: mysql-inspector write DATABASE [VERSION]"

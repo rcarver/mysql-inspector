@@ -86,7 +86,7 @@ class MysqlInspectorCliSpec < MysqlInspectorSpec
   def mysql_inspector(args)
     cli = MysqlInspector::CLI.new(config, StringIO.new, StringIO.new)
     argv = args.split(/\s+/).map { |x| x.gsub(/'/, '') }
-    catch(:quit) { cli.run(argv) }
+    catch(:quit) { cli.run!(argv) }
     cli
   end
 

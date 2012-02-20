@@ -1,5 +1,4 @@
 require 'optparse'
-require 'stringio'
 
 module MysqlInspector
   class CLI
@@ -9,36 +8,60 @@ module MysqlInspector
     CURRENT = "current"
     TARGET  = "target"
 
-    def initialize(config, stdout=nil, stderr=nil)
+    module Helper
+
+      def exit(msg)
+        @stdout.puts msg
+        throw :quit, 0
+      end
+
+      def abort(msg)
+        @stderr.puts msg
+        throw :quit, 1
+      end
+
+      def usage(msg)
+        abort "Usage: #{NAME} #{msg}"
+      end
+
+      def puts(*args)
+        @stdout.puts(*args)
+      end
+    end
+
+    module Formatting
+      # Print table item details.
+      #
+      # Examples
+      #
+      #     LABEL    item1
+      #              item2
+      #
+      def format_items(label, items, &formatter)
+        pad = " " * 4
+        formatter ||= proc { |item | item.to_sql }
+        items.each.with_index { |item, i|
+          if i == 0
+            puts [label, pad, formatter.call(item)] * ""
+          else
+            puts [" " * label.size, pad, formatter.call(item)] * ""
+          end
+        }
+      end
+    end
+
+    include Helper
+
+    def initialize(config, stdout, stderr)
       @config = config
-      @stdout = stdout || StringIO.new
-      @stderr = stderr || StringIO.new
+      @stdout = stdout
+      @stderr = stderr
       @status = 0
     end
 
     attr_reader :stdout
     attr_reader :stderr
     attr_reader :status
-
-    def exit(msg)
-      @stdout.puts msg
-      @status = 0
-      throw :quit
-    end
-
-    def abort(msg)
-      @stderr.puts msg
-      @status = 1
-      throw :quit
-    end
-
-    def puts(*args)
-      @stdout.puts(*args)
-    end
-
-    def usage(msg)
-      abort "Usage: #{NAME} #{msg}"
-    end
 
     def option_parser
       @option_parser ||= OptionParser.new do |opts|
@@ -74,128 +97,166 @@ module MysqlInspector
       end
     end
 
-    def run(argv)
+    def parse!(argv)
       option_parser.parse!(argv)
 
-      command = argv.shift
+      command_name = argv.shift or abort option_parser.to_s
+      command_class = command_name.capitalize + "Command"
 
-      if respond_to?("run_#{command}")
-        send("run_#{command}", argv)
+      if defined?(command_class)
+        klass = self.class.const_get(command_class)
+        command = klass.new(@config, @stdout, @stderr)
+        command.parse!(argv)
+        command
       else
         abort option_parser.to_s
       end
     end
 
-    def run_write(argv)
-      database = argv.shift or usage "write DATABASE [VERSION]"
-      version  = argv.shift || CURRENT
-
-      begin
-        @config.write_dump(version, database)
-      rescue MysqlInspector::Access::Error => e
-        abort e.message
-      end
-    end
-
-    def run_load(argv)
-      database = argv.shift or usage "load DATABASE [VERSION]"
-      version  = argv.shift || CURRENT
-
-      get_dump(version) # ensure it exists
-
-      begin
-        @config.load_dump(version, database)
-      rescue MysqlInspector::Access::Error => e
-        abort e.message
-      end
-    end
-
-    def run_grep(argv)
-      dump = get_dump(CURRENT)
-
-      matchers = *argv.map { |a| Regexp.new(a) }
-      grep = Grep.new(dump, matchers)
-      grep.execute
-
-      puts "#{dump.db_name}@#{CURRENT}"
-      puts
-      puts "grep #{matchers.map { |m| m.inspect } * " AND "}"
-
-      puts if grep.any_matches?
-
-      grep.each_table { |table, subset|
-        puts table.table_name
-        format_items("COL", subset.columns)
-        format_items("IDX", subset.indices)
-        format_items("CST", subset.constraints)
-        puts
+    def run!(argv)
+      @status = catch(:quit) {
+        command = parse!(argv)
+        begin
+          command.run
+        rescue MysqlInspector::Access::Error => e
+          abort e.message
+        end
+        return 0
       }
     end
 
-    def run_diff(argv)
-      dump1 = get_dump(CURRENT)
-      dump2 = get_dump(TARGET)
+    class Command
+      include Helper
 
-      diff = Diff.new(dump1, dump2)
-      diff.execute
+      def initialize(config, stdout, stderr)
+        @config = config
+        @stdout = stdout
+        @stderr = stderr
+      end
 
-      puts "diff #{dump1.db_name}@#{CURRENT} #{dump2.db_name}@#{TARGET}"
+      attr_reader :config
+      attr_reader :stdout
+      attr_reader :stderr
+      attr_reader :status
 
-      tables = diff.added_tables + diff.missing_tables + diff.different_tables
+      def ivar(name)
+        instance_variable_get("@#{name}")
+      end
 
-      if tables.any?
+      def get_dump(version)
+        dump = @config.create_dump(version)
+        dump.exists? or abort "Dump #{version.inspect} does not exist"
+        dump
+      end
+    end
+
+    class WriteCommand < Command
+
+      def parse!(argv)
+        @database = argv.shift or usage "write DATABASE [VERSION]"
+        @version = argv.shift || CURRENT
+      end
+
+      def run
+        config.write_dump(@version, @database)
+      end
+    end
+
+    class LoadCommand < Command
+
+      def parse!(argv)
+        @database = argv.shift or usage "load DATABASE [VERSION]"
+        @version  = argv.shift || CURRENT
+        @dump = get_dump(@version) # ensure it exists
+      end
+
+      def run
+        config.load_dump(@version, @database)
+      end
+    end
+
+    class GrepCommand < Command
+      include Formatting
+
+      def parse!(argv)
+        @version = CURRENT
+        @matchers = *argv.map { |a| Regexp.new(a) }
+        @dump = get_dump(@version)
+      end
+
+      def run
+        grep = Grep.new(@dump, @matchers)
+        grep.execute
+
+        puts "#{@dump.db_name}@#{@version}"
         puts
-        tables.sort.each do |t|
-          prefix = diff_prefix_for_table(t, diff)
-          puts "#{prefix} #{t.table_name}"
-          if t.is_a?(Diff::TableDiff)
-            diff_format_items("  COL", t.added_columns, t.missing_columns)
-            diff_format_items("  IDX", t.added_indices, t.missing_indices)
-            diff_format_items("  CST", t.added_constraints, t.missing_constraints)
+        puts "grep #{@matchers.map { |m| m.inspect } * " AND "}"
+
+        puts if grep.any_matches?
+
+        grep.each_table { |table, subset|
+          puts table.table_name
+          format_items("COL", subset.columns)
+          format_items("IDX", subset.indices)
+          format_items("CST", subset.constraints)
+          puts
+        }
+      end
+    end
+
+    class DiffCommand < Command
+      include Formatting
+
+      def parse!(argv)
+        @version1 = CURRENT
+        @version2 = TARGET
+        @dump1 = get_dump(@version1)
+        @dump2 = get_dump(@version2)
+      end
+
+      def run
+        diff = Diff.new(@dump1, @dump2)
+        diff.execute
+
+        puts "diff #{@dump1.db_name}@#{@version1} #{@dump2.db_name}@#{@version2}"
+
+        tables = diff.added_tables + diff.missing_tables + diff.different_tables
+
+        if tables.any?
+          puts
+          tables.sort.each do |t|
+            prefix = prefix_for_table(t, diff)
+            puts "#{prefix} #{t.table_name}"
+            if t.is_a?(Diff::TableDiff)
+              format_diff_items("  COL", t.added_columns, t.missing_columns)
+              format_diff_items("  IDX", t.added_indices, t.missing_indices)
+              format_diff_items("  CST", t.added_constraints, t.missing_constraints)
+            end
           end
+          puts
         end
-        puts
       end
-    end
 
-  protected
+    protected
 
-    def get_dump(version)
-      dump = @config.create_dump(version)
-      dump.exists? or abort "Dump #{version.inspect} does not exist"
-      dump
-    end
-
-    # Print table details
-    def format_items(label, items, &formatter)
-      pad = " " * 4
-      formatter ||= proc { |item | item.to_sql }
-      items.each.with_index { |item, i|
-        if i == 0
-          puts [label, pad, formatter.call(item)] * ""
-        else
-          puts [" " * label.size, pad, formatter.call(item)] * ""
+      def prefix_for_table(table, diff)
+        case
+        when diff.added_tables.include?(table) then "+"
+        when diff.missing_tables.include?(table) then "-"
+        else "="
         end
-      }
-    end
-
-    def diff_prefix_for_table(table, diff)
-      case
-      when diff.added_tables.include?(table) then "+"
-      when diff.missing_tables.include?(table) then "-"
-      else "="
       end
-    end
 
-    def diff_prefix_for_item(item, added, removed)
-      added.include?(item) ? "+" : "-"
-    end
+      def prefix_for_item(item, added, removed)
+        added.include?(item) ? "+" : "-"
+      end
 
-    def diff_format_items(label, added, removed)
-      format_items(label, (added + removed).sort) { |item|
-        prefix = diff_prefix_for_item(item, added, removed)
-        "#{prefix} #{item.to_sql}"
-      }
+      def format_diff_items(label, added, removed)
+        format_items(label, (added + removed).sort) { |item|
+          prefix = prefix_for_item(item, added, removed)
+          "#{prefix} #{item.to_sql}"
+        }
+      end
     end
 
   end

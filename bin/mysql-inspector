@@ -6,9 +6,5 @@ require "mysql_inspector"
 
 config = MysqlInspector::Config.new
 cli = MysqlInspector::CLI.new(config, $stdout, $stderr)
-
-catch(:quit) {
-  cli.run(ARGV)
-}
-
+cli.run!(ARGV)
 exit cli.status
