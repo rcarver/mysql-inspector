@@ -40,7 +40,7 @@ describe "mysql-inspector -h" do
   end
 end
 
-describe "mysql-inspector unknown_command" do
+describe "mysql-inspector an unknown command" do
 
   subject { mysql_inspector "unknown_command" }
 
@@ -51,3 +51,26 @@ describe "mysql-inspector unknown_command" do
   end
 end
 
+describe "mysql-inspector error cases" do
+
+  describe "when the database does not exist" do
+    subject { inspect_database "write #{database_name}" }
+    it "fails" do
+      stdout.must_equal ""
+      stderr.must_equal "The database #{database_name} does not exist"
+      status.must_equal 1
+    end
+  end
+
+  describe "when the dump does not exist" do
+    subject { inspect_database "load #{database_name}" }
+    before do
+      create_mysql_database ""
+    end
+    it "fails" do
+      stdout.must_equal ""
+      stderr.must_equal "Dump \"current\" does not exist"
+      status.must_equal 1
+    end
+  end
+end

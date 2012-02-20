@@ -2,21 +2,32 @@ require 'helper'
 
 describe "mysql-inspector write" do
 
-  describe "when you don't specify a database" do
+  describe "parsing arguments" do
 
-    subject { inspect_database "write" }
+    subject { parse_command(MysqlInspector::CLI::WriteCommand, args) }
+    let(:args) { [] }
 
-    it "fails" do
-      stdout.must_equal ""
+    specify "it fails when you don't specify a database" do
       stderr.must_equal "Usage: mysql-inspector write DATABASE [VERSION]"
-      status.must_equal 1
+      stdout.must_equal ""
+    end
+
+    specify "it writes to current" do
+      args.concat ["my_database"]
+      subject.ivar(:database).must_equal "my_database"
+      subject.ivar(:version).must_equal "current"
+    end
+
+    specify "it writes to another version" do
+      args.concat ["my_database", "other"]
+      subject.ivar(:database).must_equal "my_database"
+      subject.ivar(:version).must_equal "other"
     end
   end
 
-  describe "by default" do
+  describe "running" do
 
     subject { inspect_database "write #{database_name}" }
-
     let(:dirname) { "#{tmpdir}/current" }
 
     specify "when the database does not exist" do
@@ -40,25 +51,6 @@ describe "mysql-inspector write" do
       it "creates a directory and files"
       File.directory?(dirname).must_equal true
       Dir.glob(dirname + "/*.table").size.must_equal 3
-    end
-  end
-
-  describe "writing another version" do
-
-    subject { inspect_database "write #{database_name} target" }
-
-    let(:dirname) { "#{tmpdir}/target" }
-
-    it "creates a directory and files" do
-      create_mysql_database schema_a
-
-      it "succeeds"
-      stdout.must_equal ""
-      stderr.must_equal ""
-      status.must_equal 0
-
-      it "creates a directory and files"
-      File.directory?(dirname).must_equal true
     end
   end
 end

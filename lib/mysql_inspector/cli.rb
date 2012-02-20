@@ -97,7 +97,7 @@ module MysqlInspector
       end
     end
 
-    def parse!(argv)
+    def get_command(argv)
       option_parser.parse!(argv)
 
       command_name = argv.shift or abort option_parser.to_s
@@ -113,9 +113,17 @@ module MysqlInspector
       end
     end
 
+    def parse!(argv)
+      command = nil
+      @status = catch(:quit) {
+        command = get_command(argv)
+      }
+      command
+    end
+
     def run!(argv)
       @status = catch(:quit) {
-        command = parse!(argv)
+        command = get_command(argv)
         begin
           command.run
         rescue MysqlInspector::Access::Error => e
@@ -167,10 +175,10 @@ module MysqlInspector
       def parse!(argv)
         @database = argv.shift or usage "load DATABASE [VERSION]"
         @version  = argv.shift || CURRENT
-        @dump = get_dump(@version) # ensure it exists
       end
 
       def run
+        get_dump(@version) # ensure it exists
         config.load_dump(@version, @database)
       end
     end
@@ -181,14 +189,15 @@ module MysqlInspector
       def parse!(argv)
         @version = CURRENT
         @matchers = *argv.map { |a| Regexp.new(a) }
-        @dump = get_dump(@version)
       end
 
       def run
-        grep = Grep.new(@dump, @matchers)
+        dump = get_dump(@version)
+
+        grep = Grep.new(dump, @matchers)
         grep.execute
 
-        puts "#{@dump.db_name}@#{@version}"
+        puts "#{dump.db_name}@#{@version}"
         puts
         puts "grep #{@matchers.map { |m| m.inspect } * " AND "}"
 
@@ -210,15 +219,16 @@ module MysqlInspector
       def parse!(argv)
         @version1 = CURRENT
         @version2 = TARGET
-        @dump1 = get_dump(@version1)
-        @dump2 = get_dump(@version2)
       end
 
       def run
-        diff = Diff.new(@dump1, @dump2)
+        dump1 = get_dump(@version1)
+        dump2 = get_dump(@version2)
+
+        diff = Diff.new(dump1, dump2)
         diff.execute
 
-        puts "diff #{@dump1.db_name}@#{@version1} #{@dump2.db_name}@#{@version2}"
+        puts "diff #{dump1.db_name}@#{@version1} #{dump2.db_name}@#{@version2}"
 
         tables = diff.added_tables + diff.missing_tables + diff.different_tables
 
