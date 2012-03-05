@@ -2,10 +2,18 @@ load "Rakefile.base"
 
 require 'rake/testtask'
 
-Rake::TestTask.new do |t|
+task :test => [:test_default, :test_ar]
+
+Rake::TestTask.new(:test_default) do |t|
   t.libs.push "lib", "test"
-  t.pattern = 'test/**/*_test.rb'
+  t.pattern = 'test/mysql_inspector/**/*_test.rb'
 end
+
+Rake::TestTask.new(:test_ar) do |t|
+  t.libs.push "lib", "test"
+  t.pattern = 'test/mysql_inspector_ar/**/*_test.rb'
+end
+
 
 def load_schema(name)
   $LOAD_PATH.unshift "test"

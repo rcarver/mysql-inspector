@@ -44,10 +44,10 @@ class MysqlInspectorSpec < MiniTest::Spec
   # Create a test mysql database. The database will exist for the life
   # of the spec.
   #
-  # schema - String schema to create.
+  # schema - String schema to create (default: no schema).
   #
   # Returns nothing.
-  def create_mysql_database(schema)
+  def create_mysql_database(schema="")
     @mysql_database = true
     MysqlUtils.create_mysql_database(database_name, schema)
   end
