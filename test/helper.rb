@@ -83,15 +83,21 @@ class MysqlInspectorCliSpec < MysqlInspectorSpec
 
   let(:config) { MysqlInspector::Config.new }
 
+  before do
+    config.dir = tmpdir
+  end
+
   def parse_command(klass, argv)
     command = klass.new(config, StringIO.new, StringIO.new)
-    catch(:quit) { command.parse!(argv) }
+    command.parse!(argv)
     command
   end
 
-  def parse_args(argv)
-    cli = MysqlInspector::CLI.new(config, StringIO.new, StringIO.new)
-    cli.parse!(argv)
+  def run_command(klass, argv)
+    command = klass.new(config, StringIO.new, StringIO.new)
+    command.parse!(argv)
+    command.run!
+    command
   end
 
   def mysql_inspector(args)
@@ -102,7 +108,6 @@ class MysqlInspectorCliSpec < MysqlInspectorSpec
   end
 
   def inspect_database(args)
-    config.dir = tmpdir
     mysql_inspector args
   end
 

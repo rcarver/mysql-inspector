@@ -27,7 +27,9 @@ describe "mysql-inspector write" do
 
   describe "running" do
 
-    subject { inspect_database "write #{database_name}" }
+    subject { run_command(MysqlInspector::CLI::WriteCommand, args) }
+    let(:args) { [database_name] }
+
     let(:dirname) { "#{tmpdir}/current" }
 
     specify "when the database does not exist" do

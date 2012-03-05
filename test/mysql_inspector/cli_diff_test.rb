@@ -2,33 +2,33 @@ require 'helper'
 
 describe "mysql-inspector diff" do
 
-  describe "in general" do
+  describe "parsing arguments" do
 
-    before do
-      create_mysql_database schema_a
+    subject { parse_command(MysqlInspector::CLI::DiffCommand, args) }
+    let(:args) { [] }
+
+    specify "it compares current to target" do
+      subject.ivar(:version1).must_equal "current"
+      subject.ivar(:version2).must_equal "target"
     end
 
-    subject { inspect_database "diff" }
-
-    describe "when no current dump exists" do
-      it "tells you" do
-        stderr.must_equal %(Dump "current" does not exist)
-        stdout.must_equal ""
-        status.must_equal 1
-      end
+    specify "it compares current to something else" do
+      args << "other"
+      subject.ivar(:version1).must_equal "current"
+      subject.ivar(:version2).must_equal "other"
     end
 
-    describe "when no target dump exists" do
-      it "tells you" do
-        inspect_database "write #{database_name}"
-        stderr.must_equal %(Dump "target" does not exist)
-        stdout.must_equal ""
-        status.must_equal 1
-      end
+    specify "it compares two arbitrary versions" do
+      args << "other1"
+      args << "other2"
+      subject.ivar(:version1).must_equal "other1"
+      subject.ivar(:version2).must_equal "other2"
     end
   end
 
-  describe "when two dumps exist to compare" do
+  describe "running" do
+
+    subject { inspect_database "diff" }
 
     before do
       create_mysql_database schema_a
@@ -37,9 +37,7 @@ describe "mysql-inspector diff" do
       inspect_database "write #{database_name} target"
     end
 
-    subject { inspect_database "diff" }
-
-    it "shows the differences" do
+    specify do
       stderr.must_equal ""
       stdout.must_equal <<-EOL.unindented
         diff mysql_inspector_test@current mysql_inspector_test@target

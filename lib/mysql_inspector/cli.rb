@@ -113,23 +113,10 @@ module MysqlInspector
       end
     end
 
-    def parse!(argv)
-      command = nil
-      @status = catch(:quit) {
-        command = get_command(argv)
-      }
-      command
-    end
-
     def run!(argv)
       @status = catch(:quit) {
         command = get_command(argv)
-        begin
-          command.run
-        rescue MysqlInspector::Access::Error => e
-          abort e.message
-        end
-        return 0
+        command.run!
       }
     end
 
@@ -140,6 +127,7 @@ module MysqlInspector
         @config = config
         @stdout = stdout
         @stderr = stderr
+        @status = nil
       end
 
       attr_reader :config
@@ -156,11 +144,28 @@ module MysqlInspector
         dump.exists? or abort "Dump #{version.inspect} does not exist"
         dump
       end
+
+      def parse!(argv)
+        @status = catch(:quit) {
+          parse(argv)
+        }
+      end
+
+      def run!
+        @status = catch(:quit) {
+          begin
+            run
+            throw :quit, 0
+          rescue MysqlInspector::Access::Error => e
+            abort e.message
+          end
+        }
+      end
     end
 
     class WriteCommand < Command
 
-      def parse!(argv)
+      def parse(argv)
         @database = argv.shift or usage "write DATABASE [VERSION]"
         @version = argv.shift || CURRENT
       end
@@ -172,7 +177,7 @@ module MysqlInspector
 
     class LoadCommand < Command
 
-      def parse!(argv)
+      def parse(argv)
         @database = argv.shift or usage "load DATABASE [VERSION]"
         @version  = argv.shift || CURRENT
       end
@@ -186,7 +191,7 @@ module MysqlInspector
     class GrepCommand < Command
       include Formatting
 
-      def parse!(argv)
+      def parse(argv)
         @version = CURRENT
         @matchers = *argv.map { |a| Regexp.new(a) }
       end
@@ -216,9 +221,18 @@ module MysqlInspector
     class DiffCommand < Command
       include Formatting
 
-      def parse!(argv)
-        @version1 = CURRENT
-        @version2 = TARGET
+      def parse(argv)
+        case argv.size
+        when 0
+          @version1 = CURRENT
+          @version2 = TARGET
+        when 1
+          @version1 = CURRENT
+          @version2 = argv.shift
+        else
+          @version1 = argv.shift
+          @version2 = argv.shift
+        end
       end
 
       def run

@@ -46,6 +46,7 @@ module MysqlInspector
     end
 
     def create_dump(version)
+      raise [dir, version].inspect if dir.nil? or version.nil?
       Dump.new(File.join(dir, version))
     end
 
