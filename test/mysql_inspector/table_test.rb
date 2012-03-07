@@ -98,3 +98,25 @@ describe MysqlInspector::Table do
     EOL
   end
 end
+
+describe MysqlInspector::Table, "with PRIMARY KEY" do
+
+  subject do
+    MysqlInspector::Table.new(ideas_schema)
+  end
+
+  it "describes the index" do
+    subject.indices[0].must_equal MysqlInspector::Index.new(nil, ["id"], true)
+  end
+
+  it "generates a sql schema" do
+    subject.to_sql.must_equal <<-EOL.unindented.chomp
+      CREATE TABLE `ideas` (
+        `description` text NOT NULL,
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `name` varchar(255) NOT NULL,
+        PRIMARY KEY (`id`)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+    EOL
+  end
+end

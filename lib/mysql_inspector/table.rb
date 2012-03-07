@@ -48,6 +48,11 @@ module MysqlInspector
           name = $2
           column_names = backtick_names_in_csv($3)
           table_part line, MysqlInspector::Index.new(name, column_names, unique)
+        elsif line.strip =~ /^PRIMARY KEY #{BACKTICK_CSV}/
+          unique = true
+          name = nil
+          column_names = backtick_names_in_csv($1)
+          table_part line, MysqlInspector::Index.new(name, column_names, unique)
         end
       }.compact.sort
     end
