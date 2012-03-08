@@ -22,6 +22,7 @@ require "mysql_inspector/table"
 require "mysql_inspector/access/cli"
 
 if defined?(ActiveRecord)
+  require "mysql_inspector/ar_dump"
   require "mysql_inspector/access/ar"
 end
 

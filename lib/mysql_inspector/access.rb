@@ -3,12 +3,6 @@ module MysqlInspector
 
     Error = Class.new(StandardError)
 
-    def initialize(database_name)
-      @database_name = database_name
-    end
-
-    attr_reader :database_name
-
     def table_names
       raise NotImplementedError
     end

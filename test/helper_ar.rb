@@ -1,5 +1,5 @@
-require 'helper'
 require 'active_record'
+require 'helper'
 
 class MysqlInspectorActiveRecordpec < MysqlInspectorSpec
 
@@ -17,8 +17,19 @@ class MysqlInspectorActiveRecordpec < MysqlInspectorSpec
     end
   end
 
+  # Execute all of the fixture migrations.
+  #
+  # Returns nothing.
   def run_active_record_migrations!
     ActiveRecord::Migration.verbose = false
     ActiveRecord::Migrator.migrate(["test/fixtures/migrate"])
   end
+
+  # Get access to the mysql database via the CLI interface.
+  #
+  # Returns a MysqlInspector:Access::AR.
+  def ar_access
+    MysqlInspector::Access::AR.new(database_name, ActiveRecord::Base.connection)
+  end
+
 end

@@ -3,6 +3,12 @@ module MysqlInspector
 
     class CLI < MysqlInspector::Access
 
+      def initialize(database_name)
+        @database_name = database_name
+      end
+
+      attr_reader :database_name
+
       def table_names
         rows_from pipe_to_mysql("SHOW TABLES")
       end
