@@ -5,6 +5,10 @@ module MysqlInspector
       "schema_migrations"
     end
 
+    def migrations_columns
+      ["version"]
+    end
+
     # Public: Get the migrations to load into the migrations table.
     #
     # Returns an Array of String.
@@ -27,7 +31,7 @@ module MysqlInspector
 
     def load!(access)
       super
-      access.write_to_table(migrations_table_name, ["version"], migrations)
+      access.write_to_table(migrations_table_name, migrations_columns, migrations)
     end
 
   end

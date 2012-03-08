@@ -18,7 +18,6 @@ require "mysql_inspector/dump"
 require "mysql_inspector/grep"
 require "mysql_inspector/table"
 
-
 require "mysql_inspector/access/cli"
 
 if defined?(ActiveRecord)
