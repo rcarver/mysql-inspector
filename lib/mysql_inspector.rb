@@ -25,9 +25,4 @@ if defined?(ActiveRecord)
 end
 
 module MysqlInspector
-
-  def self.config
-    @config ||= Config.new
-  end
-
 end

@@ -81,24 +81,10 @@ module MysqlInspector
 
     def access
       if active_record?
-        MysqlInspector::AR::Access.new(active_record_connection)
+        MysqlInspector::AR::Access.new(ActiveRecord::Base.connection)
       else
         MysqlInspector::Access.new(database_name, mysql_user, mysql_password, mysql_binary)
       end
     end
-
-    def active_record_connection
-      @active_record_connection ||= begin
-        klass = Class.new(ActiveRecord::Base)
-        klass.establish_connection(
-          :adapter => :mysql2,
-          :username => mysql_user,
-          :password => mysql_password,
-          :database => database_name
-        )
-        klass.connection
-      end
-    end
-
   end
 end
