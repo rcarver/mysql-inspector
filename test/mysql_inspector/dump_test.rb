@@ -21,7 +21,7 @@ describe MysqlInspector::Dump do
   describe "when written" do
     before do
       create_mysql_database(schema_b)
-      subject.write!(cli_access)
+      subject.write!(access)
     end
     it "does exist" do
       subject.must_be :exists?
@@ -43,19 +43,19 @@ describe MysqlInspector::Dump do
   describe "when loaded" do
     before do
       create_mysql_database(schema_b)
-      subject.write!(cli_access)
+      subject.write!(access)
       create_mysql_database(ideas_schema)
     end
     it "recreates all of the tables, even ones that already exist" do
-      cli_access.table_names.must_equal ["ideas"]
-      subject.load!(cli_access)
-      cli_access.table_names.sort.must_equal ["ideas", "things", "users"]
+      access.table_names.must_equal ["ideas"]
+      subject.load!(access)
+      access.table_names.sort.must_equal ["ideas", "things", "users"]
     end
   end
 
   describe "when written but a database does not exist" do
     it "fails" do
-      proc { subject.write!(cli_access) }.must_raise MysqlInspector::Access::Error
+      proc { subject.write!(access) }.must_raise MysqlInspector::Access::Error
     end
   end
 end

@@ -59,10 +59,10 @@ class MysqlInspectorSpec < MiniTest::Spec
     MysqlUtils.drop_mysql_database(database_name)
   end
 
-  # Get access to the mysql database via the CLI interface.
+  # Get access to the mysql database.
   #
   # Returns a MysqlInspector:Access.
-  def cli_access
+  def access
     MysqlInspector::Access.new(database_name, "root", nil, "mysql")
   end
 

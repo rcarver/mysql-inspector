@@ -12,7 +12,7 @@ describe "dump activerecord migrations" do
 
   describe "when written" do
     before do
-      subject.write!(ar_access)
+      subject.write!(access)
     end
     it "has tables" do
       subject.tables.size.must_equal 3
@@ -36,12 +36,12 @@ describe "dump activerecord migrations" do
 
   describe "when loaded" do
     before do
-      subject.write!(ar_access)
+      subject.write!(access)
       create_mysql_database
-      subject.load!(ar_access)
+      subject.load!(access)
     end
     it "recreates all of the tables" do
-      ar_access.table_names.sort.must_equal ["schema_migrations", "things", "users"]
+      access.table_names.sort.must_equal ["schema_migrations", "things", "users"]
     end
     it "loads migrations" do
       values = ActiveRecord::Base.connection.select_values("select * from schema_migrations")

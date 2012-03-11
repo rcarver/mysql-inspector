@@ -2,7 +2,7 @@ require 'active_record'
 require 'mysql2'
 require 'helper'
 
-class MysqlInspectorActiveRecordpec < MysqlInspectorSpec
+class MysqlInspectorActiveRecordSpec < MysqlInspectorSpec
 
   register_spec_type(self) { |desc| desc =~ /activerecord/ }
 
@@ -26,10 +26,10 @@ class MysqlInspectorActiveRecordpec < MysqlInspectorSpec
     ActiveRecord::Migrator.migrate(["test/fixtures/migrate"])
   end
 
-  # Get access to the mysql database via the AR interface.
+  # Get access to the mysql database.
   #
-  # Returns a MysqlInspector:Access::AR.
-  def ar_access
+  # Returns a MysqlInspector:AR::Access.
+  def access
     MysqlInspector::AR::Access.new(ActiveRecord::Base.connection)
   end
 

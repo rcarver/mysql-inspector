@@ -29,7 +29,7 @@ describe "mysql-inspector load" do
       create_mysql_database schema_b
       inspect_database "write #{database_name}"
       create_mysql_database ideas_schema
-      cli_access.table_names.size.must_equal 1
+      access.table_names.size.must_equal 1
 
       it "outputs nothing"
       stdout.must_equal ""
@@ -37,7 +37,7 @@ describe "mysql-inspector load" do
       status.must_equal 0
 
       it "creates all tables"
-      cli_access.table_names.size.must_equal 3
+      access.table_names.size.must_equal 3
     end
   end
 end
