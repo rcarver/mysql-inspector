@@ -1,4 +1,5 @@
 require 'active_record'
+require 'mysql2'
 require 'helper'
 
 class MysqlInspectorActiveRecordpec < MysqlInspectorSpec
@@ -25,7 +26,7 @@ class MysqlInspectorActiveRecordpec < MysqlInspectorSpec
     ActiveRecord::Migrator.migrate(["test/fixtures/migrate"])
   end
 
-  # Get access to the mysql database via the CLI interface.
+  # Get access to the mysql database via the AR interface.
   #
   # Returns a MysqlInspector:Access::AR.
   def ar_access

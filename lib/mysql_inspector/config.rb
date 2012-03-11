@@ -9,7 +9,7 @@ module MysqlInspector
       @mysql_user ||= "root"
     end
 
-    def mysql_password(password)
+    def mysql_password=(password)
       @mysql_password = password
     end
 
@@ -42,12 +42,21 @@ module MysqlInspector
     end
 
     def access(database_name)
-      MysqlInspector::Access::CLI.new(database_name)
+      if active_record?
+        MysqlInspector::Access::AR.new(database_name, active_record_connection(database_name))
+      else
+        MysqlInspector::Access::CLI.new(database_name)
+      end
     end
 
     def create_dump(version)
       raise [dir, version].inspect if dir.nil? or version.nil?
-      Dump.new(File.join(dir, version))
+      file = File.join(dir, version)
+      if active_record?
+        ARDump.new(file)
+      else
+        Dump.new(file)
+      end
     end
 
     def write_dump(version, database_name)
@@ -56,6 +65,24 @@ module MysqlInspector
 
     def load_dump(version, database_name)
       create_dump(version).load!(access(database_name))
+    end
+
+    def active_record?
+      defined?(ActiveRecord)
+    end
+
+    def active_record_connection(database_name)
+      @active_record_connection ||= {}
+      @active_record_connection[database_name] ||= begin
+        klass = Class.new(ActiveRecord::Base)
+        klass.establish_connection(
+          :adapter => :mysql2,
+          :username => mysql_user,
+          :password => mysql_password,
+          :database => database_name
+        )
+        klass.connection
+      end
     end
 
   end

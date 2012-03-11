@@ -24,7 +24,7 @@ module MysqlInspector
       end
 
       def drop_all_tables
-        without_foreign_keys do
+        connection.disable_referential_integrity do
           names = table_names
           connection.execute("DROP TABLE #{names.join(',')}") if names.any?
         end
@@ -43,17 +43,6 @@ module MysqlInspector
       def write_to_table(table_name, cols, rows)
         values = rows.map { |value| "('#{value}')" }
         connection.execute("INSERT INTO #{table_name} (#{cols.join(',')}) VALUES #{values * ','}")
-      end
-
-    protected
-
-      def without_foreign_keys
-        begin
-          connection.execute disable_foreign_keys
-          yield
-        ensure
-          connection.execute enable_foreign_keys
-        end
       end
     end
 

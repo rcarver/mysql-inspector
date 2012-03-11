@@ -19,15 +19,5 @@ module MysqlInspector
       raise NotImplementedError
     end
 
-  protected
-
-    def disable_foreign_keys
-      "SET foreign_key_checks = 0"
-    end
-
-    def enable_foreign_keys
-      "SET foreign_key_checks = 1"
-    end
-
   end
 end

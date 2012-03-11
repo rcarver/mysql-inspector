@@ -32,7 +32,7 @@ module MysqlInspector
     protected
 
       def without_foreign_keys(query)
-        [disable_foreign_keys, query, enable_foreign_keys].join(";\n")
+        ["SET foreign_key_checks = 0", query, "SET foreign_key_checks = 1"].join(";\n")
       end
 
       def pipe_to_mysql(query)
