@@ -20,13 +20,6 @@ module MysqlInspector
       end
     end
 
-    def db_name
-      if exists?
-        # FIXME: store db name in yaml info file
-        "mysql_inspector_test"
-      end
-    end
-
     # Public: Delete this dump from the filesystem.
     #
     # Returns nothing.

@@ -32,8 +32,6 @@ describe "mysql-inspector grep" do
 
       stderr.must_equal ""
       stdout.must_equal <<-EOL.unindented
-        mysql_inspector_test@current
-
         grep /name/
 
         things
@@ -58,8 +56,6 @@ describe "mysql-inspector grep" do
 
       stderr.must_equal ""
       stdout.must_equal <<-EOL.unindented
-        mysql_inspector_test@current
-
         grep /name/ AND /first/
 
         things

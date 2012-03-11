@@ -40,7 +40,7 @@ describe "mysql-inspector diff" do
     specify do
       stderr.must_equal ""
       stdout.must_equal <<-EOL.unindented
-        diff mysql_inspector_test@current mysql_inspector_test@target
+        diff current target
 
         - colors
         = things

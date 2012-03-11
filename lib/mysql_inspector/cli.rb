@@ -204,8 +204,6 @@ module MysqlInspector
         grep = Grep.new(dump, @matchers)
         grep.execute
 
-        puts "#{dump.db_name}@#{@version}"
-        puts
         puts "grep #{@matchers.map { |m| m.inspect } * " AND "}"
 
         puts if grep.any_matches?
@@ -244,7 +242,7 @@ module MysqlInspector
         diff = Diff.new(dump1, dump2)
         diff.execute
 
-        puts "diff #{dump1.db_name}@#{@version1} #{dump2.db_name}@#{@version2}"
+        puts "diff #{@version1} #{@version2}"
 
         tables = diff.added_tables + diff.missing_tables + diff.different_tables
 
