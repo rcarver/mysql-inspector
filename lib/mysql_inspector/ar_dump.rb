@@ -5,8 +5,8 @@ module MysqlInspector
       "schema_migrations"
     end
 
-    def migrations_columns
-      ["version"]
+    def migrations_column
+      "version"
     end
 
     # Public: Get the migrations to load into the migrations table.
@@ -23,7 +23,7 @@ module MysqlInspector
 
     def write!(access)
       super
-      migrations = access.read_from_table(migrations_table_name)
+      migrations = access.read_migrations(migrations_table_name)
       File.open(File.join(dir, "#{migrations_table_name}.tsv"), "w") { |f|
         f.puts migrations.sort.join("\n")
       }
@@ -31,7 +31,7 @@ module MysqlInspector
 
     def load!(access)
       super
-      access.write_to_table(migrations_table_name, migrations_columns, migrations)
+      access.write_migrations(migrations_table_name, migrations_column, migrations)
     end
 
   end

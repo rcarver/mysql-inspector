@@ -1,6 +1,5 @@
 module MysqlInspector
   class Access
-
     class CLI < MysqlInspector::Access
 
       def initialize(database_name, mysql_user, mysql_password, mysql_path)
@@ -9,8 +8,6 @@ module MysqlInspector
         @mysql_password = mysql_password
         @mysql_path = mysql_path
       end
-
-      attr_reader :database_name
 
       def table_names
         rows_from pipe_to_mysql("SHOW TABLES")
@@ -49,7 +46,7 @@ module MysqlInspector
         unless status.exitstatus == 0
           case err
           when /\s1049\s/
-            raise Error, "The database #{database_name} does not exist"
+            raise Error, "The database #{@database_name} does not exist"
           else
             raise Error, err
           end
