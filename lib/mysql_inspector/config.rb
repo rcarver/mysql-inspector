@@ -1,52 +1,31 @@
 module MysqlInspector
   class Config
 
+    def initialize
+      @mysql_user = "root"
+      @mysql_password = nil
+      @mysql_binary = "mysql"
+      @dir = File.expand_path(Dir.pwd)
+    end
+
     #
     # Config
     #
 
-    def mysql_user=(user)
-      @mysql_user = user
+    attr_accessor :mysql_user
+    attr_accessor :mysql_password
+    attr_accessor :mysql_binary
+
+    attr_accessor :database_name
+    attr_accessor :dir
+
+    def rails!
+      @rails = true
+      self.dir = File.join(Rails.root, "db")
     end
 
-    def mysql_user
-      @mysql_user ||= "root"
-    end
-
-    def mysql_password=(password)
-      @mysql_password = password
-    end
-
-    def mysql_password
-      @mysql_password
-    end
-
-    def database_name=(name)
-      @database_name = name
-    end
-
-    def database_name
-      @database_name or raise "No database has been configured"
-    end
-
-    def dir=(dir)
-      @dir = dir
-    end
-
-    def dir
-      @dir ||= File.expand_path(Dir.pwd)
-    end
-
-    def mysql_binary=(path)
-      @mysql_binary = path
-    end
-
-    def mysql_binary
-      @mysql_binary ||= begin
-        path = `which mysql`.chomp
-        raise RuntimeError, "mysql is not in your $PATH" if path.empty?
-        path
-      end
+    def rails?
+      !!@rails
     end
 
     #
@@ -81,6 +60,11 @@ module MysqlInspector
 
     def access
       if active_record?
+        if rails? && database_name
+          config = ActiveRecord::Base.configurations[database_name]
+          config or raise MysqlInspector::Access::Error, "The database configuration #{database_name.inspect} does not exist"
+          ActiveRecord::Base.establish_connection(config)
+        end
         MysqlInspector::AR::Access.new(ActiveRecord::Base.connection)
       else
         MysqlInspector::Access.new(database_name, mysql_user, mysql_password, mysql_binary)
