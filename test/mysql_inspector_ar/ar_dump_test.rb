@@ -7,7 +7,7 @@ describe "dump activerecord migrations" do
   end
 
   subject do
-    MysqlInspector::ARDump.new(tmpdir)
+    MysqlInspector::AR::Dump.new(tmpdir)
   end
 
   describe "when written" do

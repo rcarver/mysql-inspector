@@ -30,7 +30,7 @@ class MysqlInspectorActiveRecordpec < MysqlInspectorSpec
   #
   # Returns a MysqlInspector:Access::AR.
   def ar_access
-    MysqlInspector::Access::AR.new(ActiveRecord::Base.connection)
+    MysqlInspector::AR::Access.new(ActiveRecord::Base.connection)
   end
 
 end

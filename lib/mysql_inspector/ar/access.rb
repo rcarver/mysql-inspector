@@ -1,6 +1,6 @@
 module MysqlInspector
-  class Access
-    class AR < MysqlInspector::Access
+  module AR
+    class Access
 
       def initialize(connection)
         @connection = connection

@@ -57,7 +57,7 @@ module MysqlInspector
       raise [dir, version].inspect if dir.nil? or version.nil?
       file = File.join(dir, version)
       if active_record?
-        ARDump.new(file)
+        AR::Dump.new(file)
       else
         Dump.new(file)
       end
@@ -81,9 +81,9 @@ module MysqlInspector
 
     def access
       if active_record?
-        MysqlInspector::Access::AR.new(active_record_connection)
+        MysqlInspector::AR::Access.new(active_record_connection)
       else
-        MysqlInspector::Access::CLI.new(database_name, mysql_user, mysql_password, mysql_binary)
+        MysqlInspector::Access.new(database_name, mysql_user, mysql_password, mysql_binary)
       end
     end
 
