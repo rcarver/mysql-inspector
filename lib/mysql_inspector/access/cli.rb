@@ -3,8 +3,11 @@ module MysqlInspector
 
     class CLI < MysqlInspector::Access
 
-      def initialize(database_name)
+      def initialize(database_name, mysql_user, mysql_password, mysql_path)
         @database_name = database_name
+        @mysql_user = mysql_user
+        @mysql_password = mysql_password
+        @mysql_path = mysql_path
       end
 
       attr_reader :database_name
@@ -36,7 +39,7 @@ module MysqlInspector
       end
 
       def pipe_to_mysql(query)
-        mysql_command = MysqlInspector.config.mysql_command
+        mysql_command = [@mysql_path, "-u#{@mysql_user}", @mysql_password ? "-p#{@mysql_password}" : nil].compact * " "
         out, err, status = nil
         Tempfile.open('schema') do |file|
           file.print(query)

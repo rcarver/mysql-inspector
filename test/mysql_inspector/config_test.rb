@@ -5,7 +5,8 @@ describe MysqlInspector::Config do
   subject { MysqlInspector::Config.new }
 
   it "uses Access::CLI" do
-    subject.access("test").must_be_instance_of MysqlInspector::Access::CLI
+    subject.database_name = "test"
+    subject.access.must_be_instance_of MysqlInspector::Access::CLI
   end
 
   it "uses Dump" do

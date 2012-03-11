@@ -1,6 +1,10 @@
 module MysqlInspector
   class Config
 
+    #
+    # Config
+    #
+
     def mysql_user=(user)
       @mysql_user = user
     end
@@ -17,6 +21,22 @@ module MysqlInspector
       @mysql_password
     end
 
+    def database_name=(name)
+      @database_name = name
+    end
+
+    def database_name
+      @database_name or raise "No database has been configured"
+    end
+
+    def dir=(dir)
+      @dir = dir
+    end
+
+    def dir
+      @dir ||= File.expand_path(Dir.pwd)
+    end
+
     def mysql_binary=(path)
       @mysql_binary = path
     end
@@ -29,25 +49,9 @@ module MysqlInspector
       end
     end
 
-    def mysql_command
-      [mysql_binary, "-u#{mysql_user}", mysql_password ? "-p#{mysql_password}" : nil].compact * " "
-    end
-
-    def dir=(dir)
-      @dir = dir
-    end
-
-    def dir
-      @dir ||= File.expand_path(Dir.pwd)
-    end
-
-    def access(database_name)
-      if active_record?
-        MysqlInspector::Access::AR.new(database_name, active_record_connection(database_name))
-      else
-        MysqlInspector::Access::CLI.new(database_name)
-      end
-    end
+    #
+    # API
+    #
 
     def create_dump(version)
       raise [dir, version].inspect if dir.nil? or version.nil?
@@ -59,21 +63,32 @@ module MysqlInspector
       end
     end
 
-    def write_dump(version, database_name)
-      create_dump(version).write!(access(database_name))
+    def write_dump(version)
+      create_dump(version).write!(access)
     end
 
-    def load_dump(version, database_name)
-      create_dump(version).load!(access(database_name))
+    def load_dump(version)
+      create_dump(version).load!(access)
     end
+
+    #
+    # Impl
+    #
 
     def active_record?
       defined?(ActiveRecord)
     end
 
-    def active_record_connection(database_name)
-      @active_record_connection ||= {}
-      @active_record_connection[database_name] ||= begin
+    def access
+      if active_record?
+        MysqlInspector::Access::AR.new(active_record_connection)
+      else
+        MysqlInspector::Access::CLI.new(database_name, mysql_user, mysql_password, mysql_binary)
+      end
+    end
+
+    def active_record_connection
+      @active_record_connection ||= begin
         klass = Class.new(ActiveRecord::Base)
         klass.establish_connection(
           :adapter => :mysql2,

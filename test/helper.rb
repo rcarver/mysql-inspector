@@ -63,7 +63,7 @@ class MysqlInspectorSpec < MiniTest::Spec
   #
   # Returns a MysqlInspector:Access::CLI.
   def cli_access
-    MysqlInspector::Access::CLI.new(database_name)
+    MysqlInspector::Access::CLI.new(database_name, "root", nil, "mysql")
   end
 
   before do

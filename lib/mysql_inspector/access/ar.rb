@@ -3,12 +3,10 @@ module MysqlInspector
 
     class AR < MysqlInspector::Access
 
-      def initialize(database_name, connection)
-        @database_name = database_name
+      def initialize(connection)
         @connection = connection
       end
 
-      attr_reader :database_name
       attr_reader :connection
 
       def table_names

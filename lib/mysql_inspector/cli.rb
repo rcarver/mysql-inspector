@@ -171,7 +171,8 @@ module MysqlInspector
       end
 
       def run
-        config.write_dump(@version, @database)
+        config.database_name = @database
+        config.write_dump(@version)
       end
     end
 
@@ -184,7 +185,8 @@ module MysqlInspector
 
       def run
         get_dump(@version) # ensure it exists
-        config.load_dump(@version, @database)
+        config.database_name = @database
+        config.load_dump(@version)
       end
     end
 
