@@ -35,13 +35,11 @@ module MysqlInspector
     #
 
     def create_dump(version)
-      raise [dir, version].inspect if dir.nil? or version.nil?
+      raise ["Missing dir or version", dir, version].inspect if dir.nil? or version.nil?
       file = File.join(dir, version)
-      if migrations
-        AR::Dump.new(file)
-      else
-        Dump.new(file)
-      end
+      extras = []
+      extras << Migrations.new(file) if migrations
+      Dump.new(file, *extras)
     end
 
     def write_dump(version)

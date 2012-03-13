@@ -14,13 +14,13 @@ require "mysql_inspector/cli"
 require "mysql_inspector/config"
 require "mysql_inspector/diff"
 require "mysql_inspector/grep"
+require "mysql_inspector/migrations"
 require "mysql_inspector/table"
 
 require "mysql_inspector/access"
 require "mysql_inspector/dump"
 
 require "mysql_inspector/ar/access"
-require "mysql_inspector/ar/dump"
 
 if defined?(Rails)
   require 'mysql_inspector/railtie'

@@ -2,23 +2,19 @@ require 'helper_ar'
 
 describe "dump activerecord migrations" do
 
-  before do
-    run_active_record_migrations!
-  end
+  let(:dump) { MysqlInspector::Dump.new(tmpdir) }
 
   subject do
-    MysqlInspector::AR::Dump.new(tmpdir)
+    MysqlInspector::Migrations.new(tmpdir)
+  end
+
+  before do
+    run_active_record_migrations!
   end
 
   describe "when written" do
     before do
       subject.write!(access)
-    end
-    it "has tables" do
-      subject.tables.size.must_equal 3
-    end
-    it "writes tables to disk" do
-      Dir[File.join(tmpdir, "*.table")].size.must_equal 3
     end
     it "has migrations" do
       subject.migrations.size.must_equal 2
@@ -36,12 +32,11 @@ describe "dump activerecord migrations" do
 
   describe "when loaded" do
     before do
+      dump.write!(access)
       subject.write!(access)
       create_mysql_database
+      dump.load!(access)
       subject.load!(access)
-    end
-    it "recreates all of the tables" do
-      access.table_names.sort.must_equal ["schema_migrations", "things", "users"]
     end
     it "loads migrations" do
       values = ActiveRecord::Base.connection.select_values("select * from schema_migrations")

@@ -1,8 +1,9 @@
 module MysqlInspector
   class Dump
 
-    def initialize(dir)
+    def initialize(dir, *extras)
       @dir = dir
+      @extras = extras
       @info_file = File.join(dir, ".info")
     end
 
@@ -56,6 +57,7 @@ module MysqlInspector
           }
         }
         File.open(@info_file, "w") { |f| f.print(Time.now.utc.to_s) }
+        @extras.each { |extra| extra.write!(dir, access) }
       rescue
         FileUtils.rm_rf(dir) # note this does not remove all the dirs that may have been created.
         raise
@@ -72,6 +74,7 @@ module MysqlInspector
       schema = tables.map { |t| t.to_sql }.join(";")
       access.drop_all_tables
       access.load(schema)
+      @extras.each { |extra| extra.load!(dir, access) }
     end
 
   end
