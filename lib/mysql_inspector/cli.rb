@@ -75,6 +75,10 @@ module MysqlInspector
           @config.dir = dir
         end
 
+        opts.on("--rails", "Configure for a Rails project") do
+          @config.rails!
+        end
+
         opts.on("-h", "--help", "What you're looking at") do
           exit opts.to_s
         end

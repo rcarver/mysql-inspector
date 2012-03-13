@@ -7,7 +7,6 @@ class MysqlInspectorActiveRecordSpec < MysqlInspectorSpec
   register_spec_type(self) { |desc| desc =~ /activerecord/ }
 
   before do
-    create_mysql_database
     unless ActiveRecord::Base.connected?
       ActiveRecord::Base.establish_connection(
         :adapter => :mysql2,
@@ -16,6 +15,8 @@ class MysqlInspectorActiveRecordSpec < MysqlInspectorSpec
         :password => nil
       )
     end
+    create_mysql_database
+    config.migrations = true
   end
 
   # Execute all of the fixture migrations.

@@ -2,16 +2,15 @@
 
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 
-begin
-  require File.expand_path('config/environment',  Dir.pwd)
-rescue LoadError
-  # No Rails
+# Detect a Rails project.
+rails_env = File.expand_path('config/environment',  Dir.pwd)
+if File.exist?(rails_env + ".rb")
+  ARGV.unshift("--rails")
 end
 
 require "mysql_inspector"
 
 config = MysqlInspector::Config.new
-config.rails! if defined?(Rails)
 
 cli = MysqlInspector::CLI.new(config, $stdout, $stderr)
 cli.run!(ARGV)

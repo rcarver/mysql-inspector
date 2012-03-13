@@ -23,6 +23,7 @@ describe "mysql-inspector -h" do
       Options
 
               --out DIR                    Where to store schemas. Defaults to '.'
+              --rails                      Configure for a Rails project
           -h, --help                       What you're looking at
           -v, --version                    Show the version of mysql-inspector
 

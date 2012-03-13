@@ -66,6 +66,8 @@ class MysqlInspectorSpec < MiniTest::Spec
     MysqlInspector::Access.new(database_name, "root", nil, "mysql")
   end
 
+  let(:config) { MysqlInspector::Config.new }
+
   before do
     @tmpdirs = {}
     @mysql_database = nil
@@ -80,8 +82,6 @@ end
 class MysqlInspectorCliSpec < MysqlInspectorSpec
 
   register_spec_type(self) { |desc| desc =~ /mysql-inspector/ }
-
-  let(:config) { MysqlInspector::Config.new }
 
   before do
     config.dir = tmpdir
