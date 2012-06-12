@@ -1,4 +1,4 @@
-namespace :db do
+mysql_inspector_db_namespace = namespace :db do
 
   def mysql_inspector_config(database=nil)
     config = MysqlInspector::Config.new
@@ -7,8 +7,11 @@ namespace :db do
     config
   end
 
-  # Splice mysql_inspector task into db:setup.
-  task(:setup).prerequisites.unshift('db:mysql_inspector:load')
+  # Totally reset the setup task.
+  task(:setup).clear_prerequisites.clear_actions
+
+  # Redefine the setup task to use mysql_inspector.
+  task :setup => ['db:create', 'mysql_inspector:load']
 
   # Totally reset the _dump task.
   task(:_dump).clear_prerequisites.clear_actions
@@ -17,15 +20,15 @@ namespace :db do
   task :_dump => "db:mysql_inspector:dump" do
     # Allow this task to be called as many times as required. An example is the
     # migrate:redo task, which calls other two internally that depend on this one.
-    db_namespace['_dump'].reenable
+    mysql_inspector_db_namespace['_dump'].reenable
   end
 
   namespace :mysql_inspector do
     task :dump => :environment do
-      mysql_inspector_config.write_dump("current")
+      mysql_inspector_config("development").write_dump("current")
     end
-    task :load => :environment do
-      mysql_inspector_config.load_dump("current")
+    task :load => [:environment, :load_config] do
+      mysql_inspector_config("development").load_dump("current")
     end
   end
 
