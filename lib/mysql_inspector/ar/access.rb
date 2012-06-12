@@ -26,18 +26,26 @@ module MysqlInspector
       end
 
       def load(schema)
-        schema.split(";").each { |table|
-          @connection.execute(table)
-        }
+        @connection.disable_referential_integrity do
+          schema.split(";").each { |table|
+            @connection.execute(table)
+          }
+        end
       end
 
       def read_migrations(table_name)
-        @connection.select_values("SELECT * FROM #{table_name}")
+        if table_names.include?(table_name)
+          @connection.select_values("SELECT * FROM #{table_name}")
+        else
+          []
+        end
       end
 
       def write_migrations(table_name, col, values)
-        values = values.map { |value| "('#{value}')" }
-        @connection.execute("INSERT INTO #{table_name} (#{col}) VALUES #{values * ','}")
+        if table_names.include?(table_name)
+          values = values.map { |value| "('#{value}')" }
+          @connection.execute("INSERT INTO #{table_name} (#{col}) VALUES #{values * ','}")
+        end
       end
     end
 

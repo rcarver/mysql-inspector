@@ -1,46 +1,29 @@
 require 'helper_ar'
 
-describe "dump activerecord migrations" do
+describe "dump and load activerecord" do
 
-  let(:dump) { MysqlInspector::Dump.new(tmpdir) }
-
-  subject do
-    MysqlInspector::Migrations.new(tmpdir)
-  end
-
-  before do
-    run_active_record_migrations!
-  end
+  subject { MysqlInspector::Dump.new(tmpdir) }
 
   describe "when written" do
     before do
+      create_mysql_database(schema_b)
       subject.write!(access)
     end
-    it "has migrations" do
-      subject.migrations.size.must_equal 2
-    end
-    it "writes migrations to disk" do
-      file = File.join(tmpdir, "schema_migrations.tsv")
-      File.exist?(file).must_equal true
-      migrations = File.read(file)
-      migrations.must_equal <<-EOL.unindented
-        111
-        222
-      EOL
+    it "has tables" do
+      subject.tables.size.must_equal 3
     end
   end
 
   describe "when loaded" do
     before do
-      dump.write!(access)
+      create_mysql_database(schema_b)
       subject.write!(access)
-      create_mysql_database
-      dump.load!(access)
-      subject.load!(access)
+      create_mysql_database(ideas_schema)
     end
-    it "loads migrations" do
-      values = ActiveRecord::Base.connection.select_values("select * from schema_migrations")
-      values.sort.must_equal ["111", "222"]
+    it "recreates all of the tables, even ones that already exist" do
+      access.table_names.must_equal ["ideas"]
+      subject.load!(access)
+      access.table_names.sort.must_equal ["ideas", "things", "users"]
     end
   end
 end
