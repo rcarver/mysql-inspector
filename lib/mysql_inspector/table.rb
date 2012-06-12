@@ -50,7 +50,7 @@ module MysqlInspector
           table_part line, MysqlInspector::Index.new(name, column_names, unique)
         elsif line.strip =~ /^PRIMARY KEY #{BACKTICK_CSV}/
           unique = true
-          name = nil
+          name = "PRIMARY KEY"
           column_names = backtick_names_in_csv($1)
           table_part line, MysqlInspector::Index.new(name, column_names, unique)
         end

@@ -106,7 +106,7 @@ describe MysqlInspector::Table, "with PRIMARY KEY" do
   end
 
   it "describes the index" do
-    subject.indices[0].must_equal MysqlInspector::Index.new(nil, ["id"], true)
+    subject.indices[0].must_equal MysqlInspector::Index.new("PRIMARY KEY", ["id"], true)
   end
 
   it "generates a sql schema" do
@@ -115,7 +115,8 @@ describe MysqlInspector::Table, "with PRIMARY KEY" do
         `description` text NOT NULL,
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `name` varchar(255) NOT NULL,
-        PRIMARY KEY (`id`)
+        PRIMARY KEY (`id`),
+        KEY `name` (`name`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     EOL
   end

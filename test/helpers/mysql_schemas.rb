@@ -28,7 +28,8 @@ module MysqlSchemas
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `name` varchar(255) NOT NULL,
         `description` text NOT NULL,
-        PRIMARY KEY (`id`)
+        PRIMARY KEY (`id`),
+        KEY `name` (`name`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     STR
   end

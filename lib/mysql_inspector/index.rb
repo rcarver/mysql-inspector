@@ -5,7 +5,7 @@ module MysqlInspector
 
     def to_sql
       parts = []
-      if name.nil? && unique
+      if name == "PRIMARY KEY" && unique
         parts << "PRIMARY KEY"
         parts << paren(column_names.map { |c| quote(c) })
       else
