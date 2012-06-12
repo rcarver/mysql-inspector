@@ -12,9 +12,6 @@ describe MysqlInspector::Dump do
     it "does not exist" do
       subject.exists?.must_equal false
     end
-    it "has no timestamp" do
-      subject.timestamp.must_equal nil
-    end
     it "has no tables" do
       subject.tables.size.must_equal 0
     end
@@ -27,9 +24,6 @@ describe MysqlInspector::Dump do
     end
     it "does exist" do
       subject.must_be :exists?
-    end
-    it "has a timestamp" do
-      subject.timestamp.to_i.must_equal Time.now.utc.to_i
     end
     it "has tables" do
       subject.tables.size.must_equal 3

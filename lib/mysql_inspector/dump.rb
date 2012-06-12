@@ -4,22 +4,12 @@ module MysqlInspector
     def initialize(dir, *extras)
       @dir = dir
       @extras = extras
-      @info_file = File.join(dir, ".info")
     end
 
     # Public: Get the dump directory.
     #
     # Returns a String.
     attr_reader :dir
-
-    # Public: Get the time that this dump was created.
-    #
-    # Returns a Time
-    def timestamp
-      if exists?
-        Time.parse(File.read(@info_file).strip)
-      end
-    end
 
     # Public: Delete this dump from the filesystem.
     #
@@ -32,7 +22,7 @@ module MysqlInspector
     #
     # Returns a boolean.
     def exists?
-      File.exist?(@info_file)
+      Dir[File.join(dir, "*")].any?
     end
 
     # Public: Get the tables written by the dump.
@@ -56,7 +46,6 @@ module MysqlInspector
             f.print table.to_simple_schema
           }
         }
-        File.open(@info_file, "w") { |f| f.print(Time.now.utc.to_s) }
         @extras.each { |extra| extra.write!(access) }
       rescue
         FileUtils.rm_rf(dir) # note this does not remove all the dirs that may have been created.
