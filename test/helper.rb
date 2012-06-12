@@ -63,7 +63,7 @@ class MysqlInspectorSpec < MiniTest::Spec
   #
   # Returns a MysqlInspector:Access.
   def access
-    MysqlInspector::Access.new(database_name, "root", nil, "mysql")
+    (@access ||= {})[database_name] ||= MysqlInspector::Access.new(database_name, "root", nil, "mysql")
   end
 
   let(:config) { MysqlInspector::Config.new }

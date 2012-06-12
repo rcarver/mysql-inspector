@@ -2,8 +2,10 @@ require 'helper'
 
 describe MysqlInspector::Dump do
 
+  let(:extras) { [] }
+
   subject do
-    MysqlInspector::Dump.new(tmpdir)
+    MysqlInspector::Dump.new(tmpdir, *extras)
   end
 
   describe "before written" do
@@ -56,6 +58,30 @@ describe MysqlInspector::Dump do
   describe "when written but a database does not exist" do
     it "fails" do
       proc { subject.write!(access) }.must_raise MysqlInspector::Access::Error
+    end
+  end
+
+  describe "extras" do
+
+    let(:extra) { MiniTest::Mock.new }
+
+    before do
+      create_mysql_database
+    end
+    after do
+      extra.verify
+    end
+
+    it "writes extras" do
+      extra.expect :write!, nil, [access]
+      extras << extra
+      subject.write!(access)
+    end
+    it "loads extras" do
+      extra = MiniTest::Mock.new
+      extra.expect :load!, nil, [access]
+      extras << extra
+      subject.load!(access)
     end
   end
 end

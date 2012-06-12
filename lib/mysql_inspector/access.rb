@@ -23,6 +23,8 @@ module MysqlInspector
     end
 
     def drop_all_tables
+      return if table_names.empty?
+
       pipe_to_mysql without_foreign_keys("DROP TABLE #{table_names.join(',')}")
     end
 
