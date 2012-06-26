@@ -21,7 +21,7 @@ mysql_inspector_db_namespace = namespace :db do
   task(:setup).clear_prerequisites.clear_actions
 
   # Redefine the setup task to use mysql_inspector.
-  task :setup => ['db:create', 'mysql_inspector:load']
+  task :setup => ['db:create', 'mysql_inspector:load', 'db:seed']
 
 
   #
