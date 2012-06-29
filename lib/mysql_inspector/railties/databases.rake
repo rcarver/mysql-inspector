@@ -47,9 +47,9 @@ mysql_inspector_db_namespace = namespace :db do
   task(:abort_if_pending_migrations).clear_prerequisites
 
   # Fix that we need to connect to the dev database.
-  task :abort_if_pending_migrations => :mysql_inspector_connect_to_dev
-  task :mysql_inspector_connect_to_dev => :environment do
-    ActiveRecord::Base.establish_connection(:development)
+  task :abort_if_pending_migrations => :mysql_inspector_connect_to_env
+  task :mysql_inspector_connect_to_env => :environment do
+    ActiveRecord::Base.establish_connection(Rails.env)
   end
 
 
