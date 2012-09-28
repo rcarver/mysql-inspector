@@ -63,7 +63,12 @@ mysql_inspector_db_namespace = namespace :db do
     task(:prepare).clear_prerequisites.clear_actions
 
     # Redefine db:test:prepare to load the mysql_inspector structure.
-    task :prepare => ["db:test:purge", "db:abort_if_pending_migrations", "db:mysql_inspector:load_to_test"]
+    # NOTE: We do not call abort_if_pending_migrations here as is done for the Rails tasks.
+    # The rationale here is the the stored schema is managed by running
+    # migrations, and since we use the stored schema instead of the current
+    # development database to create the test database, there's not as much
+    # need to do this verification.
+    task :prepare => ["db:test:purge", "db:mysql_inspector:load_to_test"]
   end
 
 
