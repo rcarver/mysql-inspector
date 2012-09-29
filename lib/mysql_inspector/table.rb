@@ -62,7 +62,7 @@ module MysqlInspector
     # Returns an Array of MysqlInspector::Constraint.
     def constraints
       @constraints ||= @lines.map { |line|
-        if line.strip =~ /^CONSTRAINT #{BACKTICK_WORD} FOREIGN KEY #{BACKTICK_CSV} REFERENCES #{BACKTICK_WORD} #{BACKTICK_CSV} ON DELETE (#{REFERENCE_OPTION}) ON UPDATE (#{REFERENCE_OPTION})$/
+        if line.strip =~ /^CONSTRAINT #{BACKTICK_WORD} FOREIGN KEY #{BACKTICK_CSV} REFERENCES #{BACKTICK_WORD} #{BACKTICK_CSV} ON DELETE (#{REFERENCE_OPTION}) ON UPDATE (#{REFERENCE_OPTION}),?$/
           name = $1
           column_names = backtick_names_in_csv($2)
           foreign_name = $3

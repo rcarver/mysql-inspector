@@ -3,14 +3,19 @@ require 'helpers/string_unindented'
 # Sample table schemas used for testing.
 module MysqlSchemas
 
+  # Combine multiple tables into a schema.
+  def join_tables(*tables)
+    tables.join(";\n")
+  end
+
   # A sample starting database.
   def schema_a
-    [ideas_schema, colors_schema, things_schema_1].join(";\n")
+    join_tables ideas_schema, colors_schema, things_schema_1
   end
 
   # A sample changed database.
   def schema_b
-    [users_schema, ideas_schema, things_schema_2].join(";\n")
+    join_tables users_schema, ideas_schema, things_schema_2
   end
 
   def colors_schema
