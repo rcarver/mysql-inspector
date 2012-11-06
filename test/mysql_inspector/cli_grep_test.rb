@@ -7,7 +7,13 @@ describe "mysql-inspector grep" do
     subject { parse_command(MysqlInspector::CLI::GrepCommand, args) }
     let(:args) { [] }
 
-    specify "it searches current" do
+    specify "it searches current with one arg" do
+      args.concat ["a"]
+      subject.ivar(:version).must_equal "current"
+      subject.ivar(:matchers).must_equal [/a/]
+    end
+
+    specify "it searches current with multiple args" do
       args.concat ["a", "^b"]
       subject.ivar(:version).must_equal "current"
       subject.ivar(:matchers).must_equal [/a/, /^b/]

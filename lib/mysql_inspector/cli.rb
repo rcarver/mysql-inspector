@@ -199,7 +199,7 @@ module MysqlInspector
 
       def parse(argv)
         @version = CURRENT
-        @matchers = *argv.map { |a| Regexp.new(a) }
+        @matchers = argv.map { |a| Regexp.new(a) }
       end
 
       def run
