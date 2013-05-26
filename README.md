@@ -11,17 +11,17 @@ you'll want to do is write at least one copy of your database to disk.
 
 ### write
 
-The first thing to do is write a copy of your database to disk for
-mysql-inspector to operate on. You can name this copy whatever you want,
-by default it's called `current`.
+Write a copy of your database to disk for mysql-inspector to operate on.
+You can name this copy whatever you want, by default it's called
+`current`.
 
     mysql-inspector write my_database
 
-The result of this command will be a directory full of `.table` files,
-one for each table in your database. A `.table` file is a simplified and
-consistent representation of a table. Most importantly, it will not
-change arbitrarly like a `mysqldump` file if the order of columns
-changes or an `AUTO_INCREMENT` value is defined on the table.
+The result of this command will be a directory full of `.table` files at
+`./current`, one for each table in your database. A `.table` file is a
+simplified and consistent representation of a table. Most importantly,
+it will not change arbitrarly like a `mysqldump` file if the order of
+columns changes or an `AUTO_INCREMENT` value is defined on the table.
 mysql-inspector is purely concerned with the relational structure of the
 table and favors this over an exact representation of the current
 database schema. In practice, this means that you can commit this
